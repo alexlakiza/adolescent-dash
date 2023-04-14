@@ -18,7 +18,8 @@ def plot_finance_youth_policy_subject_budget(data):
                              mode='lines+markers',
                              line={'color': '#636EFA'}))
 
-    fig.update_layout(title=feature_name)
+    fig.update_layout(title=feature_name,
+                      width=900)
     fig.update_xaxes(title='Год', tickformat="%Y")
     fig.update_yaxes(title='Объем финансирования, руб')
 
@@ -35,7 +36,8 @@ def plot_finance_youth_policy_organ_selfrule(data):
                              mode='lines+markers',
                              line={'color': '#EF553B'}))
 
-    fig.update_layout(title=feature_name)
+    fig.update_layout(title=feature_name,
+                      width=900)
     fig.update_xaxes(title='Год', tickformat="%Y")
     fig.update_yaxes(title='Объем финансирования, руб')
 
@@ -60,7 +62,8 @@ def plot_all_finance_youth_policy(data):
                              mode='lines+markers',
                              line={'color': '#EF553B'}))
 
-    fig.update_layout(title=feature_name)
+    fig.update_layout(title=feature_name,
+                      width=900)
     fig.update_xaxes(title='Год', tickformat="%Y")
     fig.update_yaxes(title='Объем финансирования, руб')
 
@@ -80,7 +83,8 @@ def plot_n_grants(data):
                              mode='lines+markers',
                              line={'color': '#00CC96'}))
 
-    fig.update_layout(title=feature_name)
+    fig.update_layout(title=feature_name,
+                      width=900)
     fig.update_xaxes(title='Год', tickformat="%Y")
     fig.update_yaxes(title='Количество грантов, ед')
 
@@ -99,7 +103,8 @@ def plot_money_grants(data):
                              mode='lines+markers',
                              line={'color': '#AB63FA'}))
 
-    fig.update_layout(title=feature_name)
+    fig.update_layout(title=feature_name,
+                      width=900)
     fig.update_xaxes(title='Год', tickformat="%Y")
     fig.update_yaxes(title='Объем грантовых средств, руб')
 
@@ -118,7 +123,8 @@ def plot_n_region_unities(data):
                              line={'color': '#FFA15A'}))
 
     fig.update_layout(title="Количество региональных общественных объединений, пользующихся<br>государственной "
-                            "поддержкой")
+                            "поддержкой",
+                      width=900)
     fig.update_xaxes(title='Год', tickformat="%Y")
     fig.update_yaxes(title='Кол-во объединений, ед')
 
@@ -135,7 +141,8 @@ def plot_n_local_unities(data):
                              mode='lines+markers',
                              line={'color': '#19D3F3'}))
 
-    fig.update_layout(title="Количество местных общественных объединений, пользующихся<br>государственной поддержкой")
+    fig.update_layout(title="Количество местных общественных объединений, пользующихся<br>государственной поддержкой",
+                      width=900)
     fig.update_xaxes(title='Год', tickformat="%Y")
     fig.update_yaxes(title='Кол-во объединений, ед')
 
@@ -153,7 +160,8 @@ def plot_n_youth_selfrule(data):
                              mode='lines+markers',
                              line={'color': '#FF6692'}))
 
-    fig.update_layout(title=feature_name)
+    fig.update_layout(title=feature_name,
+                      width=900)
     fig.update_xaxes(title='Год', tickformat="%Y")
     fig.update_yaxes(title='Кол-во органов, ед')
 
@@ -183,7 +191,8 @@ def plot_all_n_unities_organs(data):
                              line={'color': '#FF6692'}))
 
     fig.update_layout(title='Количество общ. объединений, поддерживаемых гос-вом, '
-                            'и органов молодежного самоуправления')
+                            'и органов молодежного самоуправления',
+                      width=900)
     fig.update_xaxes(title='Год', tickformat="%Y")
     fig.update_yaxes(title='Кол-во органов, ед')
 
@@ -201,7 +210,8 @@ def plot_n_forums(data):
                              mode='lines+markers',
                              line={'color': '#109618'}))
 
-    fig.update_layout(title=feature_name)
+    fig.update_layout(title=feature_name,
+                      width=900)
     fig.update_xaxes(title='Год', tickformat="%Y")
     fig.update_yaxes(title='Кол-во форумов, ед')
 
@@ -218,7 +228,8 @@ def plot_n_people_forums(data):
                              mode='lines+markers',
                              line={'color': '#990099'}))
 
-    fig.update_layout(title=feature_name)
+    fig.update_layout(title=feature_name,
+                      width=900)
     fig.update_xaxes(title='Год', tickformat="%Y")
     fig.update_yaxes(title='Кол-во участников, чел')
 
@@ -235,7 +246,8 @@ def plot_finance_forum_subject(data):
                              mode='lines+markers',
                              line={'color': '#636EFA'}))
 
-    fig.update_layout(title=feature_name)
+    fig.update_layout(title=feature_name,
+                      width=900)
     fig.update_xaxes(title='Год', tickformat="%Y")
     fig.update_yaxes(title='Объем финансирования, руб')
 
@@ -252,7 +264,8 @@ def plot_finance_forum_local(data):
                              mode='lines+markers',
                              line={'color': '#EF553B'}))
 
-    fig.update_layout(title=feature_name)
+    fig.update_layout(title=feature_name,
+                      width=900)
     fig.update_xaxes(title='Год', tickformat="%Y")
     fig.update_yaxes(title='Объем финансирования, руб')
 
@@ -277,7 +290,8 @@ def plot_all_finance_forum(data):
                              mode='lines+markers',
                              line={'color': '#EF553B'}))
 
-    fig.update_layout(title=feature_name)
+    fig.update_layout(title=feature_name,
+                      width=900)
     fig.update_xaxes(title='Год', tickformat="%Y")
     fig.update_yaxes(title='Объем финансирования, руб')
 
