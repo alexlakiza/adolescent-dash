@@ -27,12 +27,12 @@ columns_of_2nd_feature = {
 
 # @st.cache_resource
 def map_chart(data,
-        geodata,
-        first_feature,
-        second_feature=None,
-        column_of_2nd_feature=None,
-        map_style='open-street-map',
-        colors='Желтый -> Персиковый -> Фиолетовый'):
+              geodata,
+              first_feature,
+              second_feature=None,
+              column_of_second_feature=None,
+              map_style='open-street-map',
+              colors='Желтый -> Персиковый -> Фиолетовый'):
     colors_mapper = {
         'Зеленый -> Синий': 'GnBu',
         'Белый -> Розовый -> Фиолетовый': 'RdPu',
@@ -48,11 +48,11 @@ def map_chart(data,
     else:
         temp_df = data.groupby(['Регион',
                                 'Показатель',
-                                column_of_2nd_feature]) \
+                                column_of_second_feature]) \
             .sum(numeric_only=True).reset_index()
 
         temp_df = temp_df[(temp_df['Показатель'] == first_feature) &
-                          (temp_df[column_of_2nd_feature] == second_feature)].copy()
+                          (temp_df[column_of_second_feature] == second_feature)].copy()
 
     fig = go.Figure()
 
@@ -65,18 +65,86 @@ def map_chart(data,
                                       colorscale=color))
 
     fig.update_layout(margin={"r": 0, "t": 0, "l": 0, "b": 0},
-                      mapbox_center={"lat": 64, "lon": 93},
+                      mapbox_center={"lat": 64, "lon": 98},
                       mapbox_style=map_style,
                       mapbox_zoom=2)
-                      # mapbox_zoom=2,
-                      # width=950,
-                      # height=600)
 
     return fig
 
 
-def break_long_string(string):
+def section_for_map(data,
+                    second_slice_of_title_all=None,
+                    second_slice_of_title_specific=None,
+                    checkbox_label=None,
+                    column_of_second_feature=None):
+    if column_of_second_feature:
+        second_feature_options = data[column_of_2nd_feature].unique().tolist()
+        second_option = st.selectbox(
+            label=checkbox_label,
+            options=['Все'] + second_feature_options
+        )
 
+        if second_option == 'Все':
+            map_header = map_title_slice + " " + second_slice_of_title_all
+            table_header = table_title_slice + second_slice_of_title_all
+
+            grouped_df = df.groupby(['Регион', 'Показатель']).sum(numeric_only=True).reset_index()
+            table_to_show = grouped_df[grouped_df['Показатель'] == main_option]
+
+            top_regions = table_to_show.sort_values(by=['Значение'], ascending=False)[:10]['Регион'].tolist()
+
+
+        else:
+            second_slice_of_title = f" {second_slice_of_title_specific} \"_{second_option}_\""
+            map_header = map_title_slice + second_slice_of_title
+            table_header = table_title_slice + second_slice_of_title
+
+            grouped_df = df.groupby(['Регион', 'Показатель', column_of_2nd_feature]).sum(numeric_only=True) \
+                .reset_index()
+            table_to_show = grouped_df[(grouped_df['Показатель'] == main_option) &
+                                       (grouped_df[column_of_2nd_feature] == second_option)]
+
+        st.markdown(map_header)
+
+        st.plotly_chart(map_chart(data=df,
+                                  geodata=geojson,
+                                  first_feature=main_option,
+                                  second_feature=second_option,
+                                  column_of_second_feature=column_of_second_feature,
+                                  map_style=mapbox_style,
+                                  colors=color_palette),
+                        use_container_width=True)
+
+        st.markdown("##### Топ 10 регионов по выбранному показателю")
+
+        st.plotly_chart()
+
+        show_table = st.checkbox(label='Таблица с данными',
+                                 help='Показывать таблицу с данными по выбранному показателю?',
+                                 value=False)
+        if show_table:
+            st.markdown(table_header)
+            st.info("Вы можете отсортировать записи в таблице, нажав на поле. Также вы можете увеличить размер "
+                    "таблицы, потянув за правый нижний угол")
+            st.dataframe(table_to_show)
+
+    else:
+        st.markdown(map_title_slice)
+        st.plotly_chart(map_chart(data=df, geodata=geojson, first_feature=main_option, map_style=mapbox_style,
+                                  colors=color_palette),
+                        use_container_width=True)
+
+        show_table = st.checkbox(label='Таблица с данными',
+                                 help='Показывать таблицу с данными по выбранному показателю?',
+                                 value=False)
+        if show_table:
+            st.markdown(table_title_slice)
+            st.info("Вы можете отсортировать записи в таблице, нажав на поле. Также вы можете увеличить размер "
+                    "таблицы, потянув за правый нижний угол")
+            st.dataframe(df[df['Показатель'] == main_option])
+
+
+def break_long_string(string):
     if len(string) > 55:
         median = int(len(string) / 2)
 
@@ -87,17 +155,17 @@ def break_long_string(string):
     return string
 
 
-def pie_plot(data, column_name):
+def pie_plot(data, column_name, legend_text_size=12):
     fig = go.Figure()
 
     fig.add_trace(go.Pie(labels=data[column_name].apply(break_long_string),
                          values=data['Значение']))
 
     fig.update_layout(uniformtext_mode='hide', uniformtext_minsize=14,
-                      legend=dict(font=dict(family="Courier", size=10, color="black")),
+                      legend=dict(font=dict(size=legend_text_size)),  # e.g. family="Courier"
                       margin={"r": 0, "t": 20, "l": 0, "b": 0})
     fig.update_traces(textposition='inside', textinfo='percent',
-                      hovertemplate="<b>%{label}</b><br>Значение = %{value}<br>%{percent}")
+                      hovertemplate="<b>%{label}</b><br>Значение = %{value}<br>%{percent}<extra></extra>")
 
     return fig
 
@@ -117,6 +185,34 @@ def section_for_pie_chart(data, header, column_name):
                              column_name=column_name),
                     use_container_width=True)
 
+    show_table = st.checkbox(label='Таблица с данными',
+                             help='Показывать таблицу с данными по выбранному показателю?',
+                             value=False,
+                             key='table_for_pie')
+
+    if show_table:
+        st.markdown(f'##### Таблица значений показателя \"{main_feature_for_pie}\"')
+        st.info("Вы можете отсортировать записи в таблице, нажав на поле. Также вы можете увеличить размер "
+                    "таблицы, потянув за правый нижний угол")
+        st.dataframe(temp_df.drop(['Округ', 'Показатель'], axis=1))
+
+
+def section_for_volunteer_pie_chart(data2, data3, header2, header3):
+    region_for_pie_volunteer = st.selectbox('Выберите регион',
+                                            options=df['Регион'].unique().tolist())
+
+    st.markdown(header2)
+    st.plotly_chart(pie_plot(data2[data2['Регион'] == region_for_pie_volunteer],
+                             column_name='Показатель',
+                             legend_text_size=14),
+                    use_container_width=True)
+
+    st.markdown(header3)
+    st.plotly_chart(pie_plot(data3[data3['Регион'] == region_for_pie_volunteer],
+                             column_name='Показатель'),
+                    use_container_width=True)
+
+
 @st.cache_data
 def read_dataframe(section_name):
     return pd.read_parquet(section_to_df[section_name])
@@ -132,7 +228,6 @@ if __name__ == "__main__":
                 "хотели видеть визуализацию данных")
     section = st.selectbox("Выберите раздел показателей",
                            options=list(section_to_df.keys()))
-
     st.markdown('---')
 
     df = read_dataframe(section_name=section)
@@ -141,7 +236,6 @@ if __name__ == "__main__":
         geojson = json.load(f)
 
     with st.sidebar:
-        # st.write('Параметры карты')
         with st.expander('Стиль карты'):
             mapbox_style = st.radio(
                 "Стиль фона карты",
@@ -158,193 +252,88 @@ if __name__ == "__main__":
     main_option = st.selectbox(
         'Выберите показатель для визуализации',
         options=df['Показатель'].unique().tolist())
-
-    map_title_slice = f"##### Карта субъектов РФ для показателя \"{main_option}\""
+    map_title_slice = f"#### Карта субъектов РФ для показателя \"{main_option}\""
     table_title_slice = f"##### Таблица значений показателя \"{main_option}\""
 
     if section == 'Направления реализации молодежной политики':  # P1
         column_of_2nd_feature = columns_of_2nd_feature[section]
-        second_feature_options = df[column_of_2nd_feature].unique().tolist()
-        second_option = st.selectbox(
-            label='Выберите направление реализации молодежной политики',
-            options=['Все'] + second_feature_options
-        )
 
-        full_grouped_df = df.groupby(['Регион', 'Показатель', column_of_2nd_feature]).sum(numeric_only=True) \
-            .reset_index()
+        section_for_map(data=df,
+                        second_slice_of_title_all="по всем направлениям",
+                        second_slice_of_title_specific="по направлению",
+                        checkbox_label="Выберите направление реализации молодежной политики",
+                        column_of_second_feature=column_of_2nd_feature)
 
-        if second_option == 'Все':
-            second_slice_of_title = " по всем направлениям"
-            st.markdown(map_title_slice + second_slice_of_title)
-            st.plotly_chart(map_chart(data=df, geodata=geojson, first_feature=main_option, second_feature=second_option,
-                                      column_of_2nd_feature=columns_of_2nd_feature[section], map_style=mapbox_style,
-                                      colors=color_palette), use_container_width=True)
-
-            st.markdown(table_title_slice + second_slice_of_title)
-            st.info("Вы можете отсортировать записи в таблице, нажав на поле, а также увеличивать размеры столбцов")
-            grouped_df = df.groupby(['Регион', 'Показатель']).sum(numeric_only=True).reset_index()
-            st.dataframe(grouped_df[grouped_df['Показатель'] == main_option])
-        else:
-            second_slice_of_title = f" по направлению \"_{second_option}_\""
-            st.markdown(map_title_slice + second_slice_of_title)
-            st.plotly_chart(map_chart(data=df, geodata=geojson, first_feature=main_option, second_feature=second_option,
-                                      column_of_2nd_feature=columns_of_2nd_feature[section], map_style=mapbox_style,
-                                      colors=color_palette), use_container_width=True)
-
-            st.markdown(table_title_slice + second_slice_of_title)
-            st.info("Вы можете отсортировать записи в таблице, нажав на поле, а также увеличивать размеры столбцов")
-            grouped_df = df.groupby(['Регион', 'Показатель', column_of_2nd_feature]).sum(numeric_only=True) \
-                .reset_index()
-            st.dataframe(grouped_df[(grouped_df['Показатель'] == main_option) &
-                                    (grouped_df[column_of_2nd_feature] == second_option)])
-
-        section_for_pie_chart(header=f"##### Распределение значений среди направлений "
+        section_for_pie_chart(header=f"#### Распределение значений среди направлений "
                                      f"для показателя \"{column_of_2nd_feature}\"",
                               data=df,
                               column_name=column_of_2nd_feature)
 
     elif section == 'Структуры по работе с молодежью':  # P2
         column_of_2nd_feature = columns_of_2nd_feature[section]
-        second_feature_options = df[column_of_2nd_feature].unique().tolist()
-        second_option = st.selectbox(
-            label='Выберите вид структуры по работе с молодежью',
-            options=['Все'] + second_feature_options
-        )
+        section_for_map(data=df,
+                        second_slice_of_title_all="для всех видов структур",
+                        second_slice_of_title_specific="для вида структур",
+                        checkbox_label="Выберите вид структуры по работе с молодежью",
+                        column_of_second_feature=column_of_2nd_feature)
 
-        if second_option == 'Все':
-            second_slice_of_title = " для всех видов структур"
-            st.markdown(map_title_slice + second_slice_of_title)
-            st.plotly_chart(map_chart(data=df, geodata=geojson, first_feature=main_option, second_feature=second_option,
-                                      column_of_2nd_feature=columns_of_2nd_feature[section], map_style=mapbox_style,
-                                      colors=color_palette), use_container_width=True)
-
-            st.markdown(table_title_slice + second_slice_of_title)
-            st.info("Вы можете отсортировать записи в таблице, нажав на поле, а также увеличивать размеры столбцов")
-            grouped_df = df.groupby(['Регион', 'Показатель']).sum(numeric_only=True).reset_index()
-            st.dataframe(grouped_df[grouped_df['Показатель'] == main_option])
-        else:
-            second_slice_of_title = f" для вида структур \"_{second_option}_\""
-            st.markdown(map_title_slice + second_slice_of_title)
-            st.plotly_chart(map_chart(data=df, geodata=geojson, first_feature=main_option, second_feature=second_option,
-                                      column_of_2nd_feature=columns_of_2nd_feature[section], map_style=mapbox_style,
-                                      colors=color_palette), use_container_width=True)
-
-            st.markdown(table_title_slice + second_slice_of_title)
-            st.info("Вы можете отсортировать записи в таблице, нажав на поле, а также увеличивать размеры столбцов")
-            grouped_df = df.groupby(['Регион', 'Показатель', column_of_2nd_feature]).sum(numeric_only=True) \
-                .reset_index()
-            st.dataframe(grouped_df[(grouped_df['Показатель'] == main_option) &
-                                    (grouped_df[column_of_2nd_feature] == second_option)])
-
-        section_for_pie_chart(header=f"##### Распределение значений среди видов структур "
+        section_for_pie_chart(header=f"#### Распределение значений среди видов структур "
                                      f"для показателя \"{column_of_2nd_feature}\"",
                               data=df,
                               column_name=column_of_2nd_feature)
 
     elif section == 'Распространение информации о реализации молодежной политики':  # P3
-        st.markdown(map_title_slice)
-        st.plotly_chart(map_chart(data=df, geodata=geojson, first_feature=main_option, map_style=mapbox_style,
-                                  colors=color_palette))
-
-        st.markdown(table_title_slice)
-        st.info("Вы можете отсортировать записи в таблице, нажав на поле, а также увеличивать размеры столбцов")
-        st.dataframe(df[df['Показатель'] == main_option])
+        section_for_map(data=df)
 
     elif section == 'Общественные объединения':  # P4
-        column_of_2nd_feature = columns_of_2nd_feature[section]
-        second_feature_options = df[column_of_2nd_feature].unique().tolist()
-        second_option = st.selectbox(
-            label='Выберите вид молодежных объединений',
-            options=['Все'] + second_feature_options
-        )
+        tab1, tab2 = st.tabs(["Объединения", "Объединения на базе образовательных организаций"])
+        with tab1:
+            df = pd.read_parquet('data/p4.parquet')
+            column_of_2nd_feature = columns_of_2nd_feature[section]
 
-        if second_option == 'Все':
-            second_slice_of_title = " для всех видов общ. объединений"
-            st.markdown(map_title_slice + second_slice_of_title)
-            st.plotly_chart(map_chart(data=df, geodata=geojson, first_feature=main_option, second_feature=second_option,
-                                      column_of_2nd_feature=columns_of_2nd_feature[section], map_style=mapbox_style,
-                                      colors=color_palette))
+            section_for_map(data=df,
+                            second_slice_of_title_all="для всех видов общ. объединений",
+                            second_slice_of_title_specific="по виду объединений",
+                            checkbox_label="Выберите вид молодежных объединений",
+                            column_of_second_feature=column_of_2nd_feature)
 
-            st.markdown(table_title_slice + second_slice_of_title)
-            st.info("Вы можете отсортировать записи в таблице, нажав на поле, а также увеличивать размеры столбцов")
-            grouped_df = df.groupby(['Регион', 'Показатель']).sum(numeric_only=True).reset_index()
-            st.dataframe(grouped_df[grouped_df['Показатель'] == main_option])
-        else:
-            second_slice_of_title = " по виду объединений \"_{second_option}_\""
-            st.markdown(map_title_slice + second_slice_of_title)
-            st.plotly_chart(map_chart(data=df, geodata=geojson, first_feature=main_option, second_feature=second_option,
-                                      column_of_2nd_feature=columns_of_2nd_feature[section], map_style=mapbox_style,
-                                      colors=color_palette))
+            section_for_pie_chart(header=f"#### Распределение значений среди видов объединений "
+                                         f"для показателя \"{column_of_2nd_feature}\"",
+                                  data=df,
+                                  column_name=column_of_2nd_feature)
 
-            st.markdown(table_title_slice + second_slice_of_title)
-            st.info("Вы можете отсортировать записи в таблице, нажав на поле, а также увеличивать размеры столбцов")
-            grouped_df = df.groupby(['Регион', 'Показатель', column_of_2nd_feature]).sum(numeric_only=True) \
-                .reset_index()
-            st.dataframe(grouped_df[(grouped_df['Показатель'] == main_option) &
-                                    (grouped_df[column_of_2nd_feature] == second_option)])
-
-        section_for_pie_chart(header=f"##### Распределение значений среди видов объединений "
-                                     f"для показателя \"{column_of_2nd_feature}\"",
-                              data=df,
-                              column_name=column_of_2nd_feature)
+        with tab2:
+            df = pd.read_parquet('data/p4-2.parquet')
+            section_for_map(data=df)
 
     elif section == 'Общественные объединения на базе образовательных учреждений':  # P4-2
-        st.markdown(map_title_slice)
-        st.plotly_chart(map_chart(data=df, geodata=geojson, first_feature=main_option, map_style=mapbox_style,
-                                  colors=color_palette))
-
-        st.markdown(table_title_slice)
-        st.info("Вы можете отсортировать записи в таблице, нажав на поле, а также увеличивать размеры столбцов")
-        st.dataframe(df[df['Показатель'] == main_option])
+        section_for_map(data=df)
 
     elif section == 'Молодежные форумы':  # P6
         column_of_2nd_feature = columns_of_2nd_feature[section]
-        second_feature_options = df[column_of_2nd_feature].unique().tolist()
-        second_option = st.selectbox(
-            label='Выберите вид форумов',
-            options=['Все'] + second_feature_options
-        )
 
-        full_grouped_df = df.groupby(['Регион', 'Показатель', column_of_2nd_feature]).sum(numeric_only=True) \
-            .reset_index()
+        section_for_map(data=df,
+                        second_slice_of_title_all="для всех видов форумов",
+                        second_slice_of_title_specific="для вида форумов",
+                        checkbox_label="Выберите вид молодежных форумов",
+                        column_of_second_feature=column_of_2nd_feature)
 
-        if second_option == 'Все':
-            second_slice_of_title = " для всех видов форумов"
-            st.markdown(map_title_slice + second_slice_of_title)
-            st.plotly_chart(map_chart(data=df, geodata=geojson, first_feature=main_option, second_feature=second_option,
-                                      column_of_2nd_feature=columns_of_2nd_feature[section], map_style=mapbox_style,
-                                      colors=color_palette))
-
-            st.markdown(table_title_slice + second_slice_of_title)
-            st.info("Вы можете отсортировать записи в таблице, нажав на поле, а также увеличивать размеры столбцов")
-            grouped_df = df.groupby(['Регион', 'Показатель']).sum(numeric_only=True).reset_index()
-            st.dataframe(grouped_df[grouped_df['Показатель'] == main_option])
-        else:
-            second_slice_of_title = f" для вида форумов \"{second_option}\""
-            st.markdown(map_title_slice + second_slice_of_title)
-            st.plotly_chart(map_chart(data=df, geodata=geojson, first_feature=main_option, second_feature=second_option,
-                                      column_of_2nd_feature=columns_of_2nd_feature[section], map_style=mapbox_style,
-                                      colors=color_palette))
-
-            st.markdown(table_title_slice + second_slice_of_title)
-            st.info("Вы можете отсортировать записи в таблице, нажав на поле, а также увеличивать размеры столбцов")
-
-            st.dataframe(full_grouped_df[(full_grouped_df['Показатель'] == main_option) &
-                                    (full_grouped_df[column_of_2nd_feature] == second_option)])
-
-        section_for_pie_chart(header=f"##### Распределение значений среди видов форумов "
+        section_for_pie_chart(header=f"#### Распределение значений среди видов форумов "
                                      f"для показателя \"{column_of_2nd_feature}\"",
                               data=df,
                               column_name=column_of_2nd_feature)
 
     elif section == 'Добровольчество':
-        st.markdown(map_title_slice)
-        st.plotly_chart(
-            map_chart(data=df, geodata=geojson, first_feature=main_option, map_style=mapbox_style,
-                      colors=color_palette))
+        section_for_map(data=df)
 
-        st.markdown(table_title_slice)
-        st.info("Вы можете отсортировать записи в таблице, нажав на поле, а также увеличивать размеры столбцов")
-        st.dataframe(df[df['Показатель'] == main_option])
+        df2 = pd.read_parquet('data/p7-2.parquet')
+        df3 = pd.read_parquet('data/p7-3.parquet')
 
-
+        section_for_volunteer_pie_chart(data2=df2,
+                                        data3=df3,
+                                        header2="##### Распределение возрастных категорий "
+                                                "граждан, вовлеченных центрами "
+                                                "поддержки добровольчества",
+                                        header3='##### Распределение числа '
+                                                'граждан, вовлеченных в добровольческую '
+                                                'деятельность, по направлениям')
