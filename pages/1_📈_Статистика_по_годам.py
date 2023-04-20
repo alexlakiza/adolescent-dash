@@ -18,8 +18,7 @@ def plot_finance_youth_policy_subject_budget(data):
                              mode='lines+markers',
                              line={'color': '#636EFA'}))
 
-    fig.update_layout(title=feature_name,
-                      width=900)
+    fig.update_layout(title=feature_name)
     fig.update_xaxes(title='Год', tickformat="%Y")
     fig.update_yaxes(title='Объем финансирования, руб')
 
@@ -36,8 +35,7 @@ def plot_finance_youth_policy_organ_selfrule(data):
                              mode='lines+markers',
                              line={'color': '#EF553B'}))
 
-    fig.update_layout(title=feature_name,
-                      width=900)
+    fig.update_layout(title=feature_name)
     fig.update_xaxes(title='Год', tickformat="%Y")
     fig.update_yaxes(title='Объем финансирования, руб')
 
@@ -62,8 +60,7 @@ def plot_all_finance_youth_policy(data):
                              mode='lines+markers',
                              line={'color': '#EF553B'}))
 
-    fig.update_layout(title=feature_name,
-                      width=900)
+    fig.update_layout(title=feature_name)
     fig.update_xaxes(title='Год', tickformat="%Y")
     fig.update_yaxes(title='Объем финансирования, руб')
 
@@ -83,8 +80,7 @@ def plot_n_grants(data):
                              mode='lines+markers',
                              line={'color': '#00CC96'}))
 
-    fig.update_layout(title=feature_name,
-                      width=900)
+    fig.update_layout(title=feature_name)
     fig.update_xaxes(title='Год', tickformat="%Y")
     fig.update_yaxes(title='Количество грантов, ед')
 
@@ -103,8 +99,7 @@ def plot_money_grants(data):
                              mode='lines+markers',
                              line={'color': '#AB63FA'}))
 
-    fig.update_layout(title=feature_name,
-                      width=900)
+    fig.update_layout(title=feature_name)
     fig.update_xaxes(title='Год', tickformat="%Y")
     fig.update_yaxes(title='Объем грантовых средств, руб')
 
@@ -123,8 +118,7 @@ def plot_n_region_unities(data):
                              line={'color': '#FFA15A'}))
 
     fig.update_layout(title="Количество региональных общественных объединений, пользующихся<br>государственной "
-                            "поддержкой",
-                      width=900)
+                            "поддержкой")
     fig.update_xaxes(title='Год', tickformat="%Y")
     fig.update_yaxes(title='Кол-во объединений, ед')
 
@@ -141,8 +135,7 @@ def plot_n_local_unities(data):
                              mode='lines+markers',
                              line={'color': '#19D3F3'}))
 
-    fig.update_layout(title="Количество местных общественных объединений, пользующихся<br>государственной поддержкой",
-                      width=900)
+    fig.update_layout(title="Количество местных общественных объединений, пользующихся<br>государственной поддержкой")
     fig.update_xaxes(title='Год', tickformat="%Y")
     fig.update_yaxes(title='Кол-во объединений, ед')
 
@@ -160,8 +153,7 @@ def plot_n_youth_selfrule(data):
                              mode='lines+markers',
                              line={'color': '#FF6692'}))
 
-    fig.update_layout(title=feature_name,
-                      width=900)
+    fig.update_layout(title=feature_name)
     fig.update_xaxes(title='Год', tickformat="%Y")
     fig.update_yaxes(title='Кол-во органов, ед')
 
@@ -191,8 +183,7 @@ def plot_all_n_unities_organs(data):
                              line={'color': '#FF6692'}))
 
     fig.update_layout(title='Количество общ. объединений, поддерживаемых гос-вом, '
-                            'и органов молодежного самоуправления',
-                      width=900)
+                            'и органов молодежного самоуправления')
     fig.update_xaxes(title='Год', tickformat="%Y")
     fig.update_yaxes(title='Кол-во органов, ед')
 
@@ -210,8 +201,7 @@ def plot_n_forums(data):
                              mode='lines+markers',
                              line={'color': '#109618'}))
 
-    fig.update_layout(title=feature_name,
-                      width=900)
+    fig.update_layout(title=feature_name)
     fig.update_xaxes(title='Год', tickformat="%Y")
     fig.update_yaxes(title='Кол-во форумов, ед')
 
@@ -228,8 +218,7 @@ def plot_n_people_forums(data):
                              mode='lines+markers',
                              line={'color': '#990099'}))
 
-    fig.update_layout(title=feature_name,
-                      width=900)
+    fig.update_layout(title=feature_name)
     fig.update_xaxes(title='Год', tickformat="%Y")
     fig.update_yaxes(title='Кол-во участников, чел')
 
@@ -246,8 +235,7 @@ def plot_finance_forum_subject(data):
                              mode='lines+markers',
                              line={'color': '#636EFA'}))
 
-    fig.update_layout(title=feature_name,
-                      width=900)
+    fig.update_layout(title=feature_name)
     fig.update_xaxes(title='Год', tickformat="%Y")
     fig.update_yaxes(title='Объем финансирования, руб')
 
@@ -264,8 +252,7 @@ def plot_finance_forum_local(data):
                              mode='lines+markers',
                              line={'color': '#EF553B'}))
 
-    fig.update_layout(title=feature_name,
-                      width=900)
+    fig.update_layout(title=feature_name)
     fig.update_xaxes(title='Год', tickformat="%Y")
     fig.update_yaxes(title='Объем финансирования, руб')
 
@@ -290,8 +277,7 @@ def plot_all_finance_forum(data):
                              mode='lines+markers',
                              line={'color': '#EF553B'}))
 
-    fig.update_layout(title=feature_name,
-                      width=900)
+    fig.update_layout(title=feature_name)
     fig.update_xaxes(title='Год', tickformat="%Y")
     fig.update_yaxes(title='Объем финансирования, руб')
 
@@ -328,17 +314,22 @@ if __name__ == "__main__":
         st.markdown("#### Графики объемов финансирования молодежной политики")
         tab2, tab1 = st.tabs(["Общий график объемов финансирования", "Графики по отдельности"])
         with tab1:
-            st.plotly_chart(plot_finance_youth_policy_subject_budget(df))
-            st.plotly_chart(plot_finance_youth_policy_organ_selfrule(df))
+            st.plotly_chart(plot_finance_youth_policy_subject_budget(df),
+                            use_container_width=True)
+            st.plotly_chart(plot_finance_youth_policy_organ_selfrule(df),
+                            use_container_width=True)
         with tab2:
-            st.plotly_chart(plot_all_finance_youth_policy(df))
+            st.plotly_chart(plot_all_finance_youth_policy(df),
+                            use_container_width=True)
 
         st.markdown('---')
 
     if grants:
         st.markdown("#### Графики количества выданных грантов и грантовых средств")
-        st.plotly_chart(plot_n_grants(df))
-        st.plotly_chart(plot_money_grants(df))
+        st.plotly_chart(plot_n_grants(df),
+                            use_container_width=True)
+        st.plotly_chart(plot_money_grants(df),
+                            use_container_width=True)
 
         st.markdown('---')
 
@@ -346,22 +337,31 @@ if __name__ == "__main__":
         st.markdown("#### Графики количества общественных объединений и органов молодежного самоуправления")
         tab1, tab2 = st.tabs(["Общий график", "Графики по отдельности"])
         with tab1:
-            st.plotly_chart(plot_all_n_unities_organs(df))
+            st.plotly_chart(plot_all_n_unities_organs(df),
+                            use_container_width=True)
         with tab2:
-            st.plotly_chart(plot_n_region_unities(df))
-            st.plotly_chart(plot_n_local_unities(df))
-            st.plotly_chart(plot_n_youth_selfrule(df))
+            st.plotly_chart(plot_n_region_unities(df),
+                            use_container_width=True)
+            st.plotly_chart(plot_n_local_unities(df),
+                            use_container_width=True)
+            st.plotly_chart(plot_n_youth_selfrule(df),
+                            use_container_width=True)
 
         st.markdown('---')
 
     if forums:
         st.markdown("#### Графики количества проведенных форумов, численности участников и объемов "
                     "финансирования форумов")
-        st.plotly_chart(plot_n_forums(df))
-        st.plotly_chart(plot_n_people_forums(df))
+        st.plotly_chart(plot_n_forums(df),
+                            use_container_width=True)
+        st.plotly_chart(plot_n_people_forums(df),
+                            use_container_width=True)
         tab2, tab1 = st.tabs(["Общий график объемов финансирования", "Графики по отдельности"])
         with tab1:
-            st.plotly_chart(plot_finance_forum_subject(df))
-            st.plotly_chart(plot_finance_forum_local(df))
+            st.plotly_chart(plot_finance_forum_subject(df),
+                            use_container_width=True)
+            st.plotly_chart(plot_finance_forum_local(df),
+                            use_container_width=True)
         with tab2:
-            st.plotly_chart(plot_all_finance_forum(df))
+            st.plotly_chart(plot_all_finance_forum(df),
+                            use_container_width=True)
