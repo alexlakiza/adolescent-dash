@@ -25,7 +25,6 @@ columns_of_2nd_feature = {
 }
 
 
-# @st.cache_resource
 def map_chart(data,
               geodata,
               first_feature,
@@ -212,11 +211,11 @@ def section_for_map(data,
                                      xaxis_title_slice=bar_plot_xaxis_slice),
                             use_container_width=True)
 
-        show_table = st.checkbox(label='Таблица с данными',
-                                 help='Показывать таблицу с данными по выбранному показателю?',
-                                 value=False)
-        if show_table:
-            st.markdown(table_header)
+        # show_table = st.checkbox(label='Таблица с данными',
+        #                          help='Показывать таблицу с данными по выбранному показателю?',
+        #                          value=False)
+        with st.expander(table_header):
+            # st.markdown(table_header)
             st.info("Вы можете отсортировать записи в таблице, нажав на поле. Также вы можете увеличить размер "
                     "таблицы, потянув за правый нижний угол")
             st.dataframe(table_to_show)
@@ -232,11 +231,11 @@ def section_for_map(data,
                                  first_feature=main_option),
                         use_container_width=True)
 
-        show_table = st.checkbox(label='Таблица с данными',
-                                 help='Показывать таблицу с данными по выбранному показателю?',
-                                 value=False)
-        if show_table:
-            st.markdown(table_title_slice)
+        # show_table = st.checkbox(label='Таблица с данными',
+        #                          help='Показывать таблицу с данными по выбранному показателю?',
+        #                          value=False)
+        with st.expander(table_title_slice):
+            # st.markdown(table_title_slice)
             st.info("Вы можете отсортировать записи в таблице, нажав на поле. Также вы можете увеличить размер "
                     "таблицы, потянув за правый нижний угол")
             st.dataframe(df[df['Показатель'] == main_option])
@@ -282,13 +281,13 @@ def section_for_pie_chart(data, header, column_name):
                              column_name=column_name),
                     use_container_width=True)
 
-    show_table = st.checkbox(label='Таблица с данными',
-                             help='Показывать таблицу с данными по выбранному показателю?',
-                             value=False,
-                             key='table_for_pie')
+    # show_table = st.checkbox(label='Таблица с данными',
+    #                          help='Показывать таблицу с данными по выбранному показателю?',
+    #                          value=False,
+    #                          key='table_for_pie')
 
-    if show_table:
-        st.markdown(f'##### Таблица значений показателя \"{main_feature_for_pie}\"')
+    with st.expander(f'##### Таблица значений показателя \"{main_feature_for_pie}\"'):
+        # st.markdown(f'##### Таблица значений показателя \"{main_feature_for_pie}\"')
         st.info("Вы можете отсортировать записи в таблице, нажав на поле. Также вы можете увеличить размер "
                 "таблицы, потянув за правый нижний угол")
         st.dataframe(temp_df.drop(['Округ', 'Показатель'], axis=1))
