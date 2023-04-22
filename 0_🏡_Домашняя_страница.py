@@ -8,4 +8,6 @@ if __name__ == "__main__":
     )
 
     st.title("Это домашняя страница!!!")
-    st.write('haha')
+    st.write('Здесь скоро появится описание данного веб-приложения!')
+    st.success("STAY TUNED <3")
+    st.balloons()

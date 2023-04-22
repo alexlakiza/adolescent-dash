@@ -285,6 +285,9 @@ def plot_all_finance_forum(data):
 
 
 if __name__ == "__main__":
+    st.set_page_config(page_title=None, page_icon=None, layout="wide", initial_sidebar_state="auto",
+                       menu_items=None)
+    
     st.title("Статистика по годам")
     # TODO: Добавить описание страницы
 
