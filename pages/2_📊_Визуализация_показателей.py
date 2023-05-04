@@ -155,9 +155,13 @@ def section_for_map(data,
                     bar_plot_xaxis_slice=None):
     if column_of_second_feature:
         second_feature_options = data[column_of_2nd_feature].unique().tolist()
+
+        if main_option != 'Процент молодежи, задействованной в программных мероприятиях':
+            second_feature_options.insert(0, 'Все')
+
         second_option = st.selectbox(
             label=checkbox_label,
-            options=['Все'] + second_feature_options
+            options=second_feature_options
         )
 
         if second_option == 'Все':
@@ -309,7 +313,6 @@ def section_for_volunteer_pie_chart(data2, data3, header2, header3):
                     use_container_width=True)
 
 
-@st.cache_data
 def read_dataframe(section_name):
     return pd.read_parquet(section_to_df[section_name])
 
@@ -318,7 +321,7 @@ if __name__ == "__main__":
     st.set_page_config(page_title=None, page_icon=None, layout="wide", initial_sidebar_state="auto",
                        menu_items=None)
     # TODO: Добавить описание этой страницы
-    st.title("Дашборд")
+    st.title("Визуализация показателей")
 
     st.markdown("##### Для начала работы необходимо выбрать тот раздел показателей, по котором вы бы "
                 "хотели видеть визуализацию данных")
