@@ -314,7 +314,7 @@ def section_for_volunteer_pie_chart(data2, data3, header2, header3):
 
 
 @st.cache_data
-def read_dataframe(section_name):
+def read_dataframe(section_name, year_analysis):
     return pd.read_parquet(f"data/{year_analysis}/{section_to_df[section_name]}")
 
 
@@ -330,11 +330,12 @@ if __name__ == "__main__":
                            options=list(section_to_df.keys()))
 
     year_analysis = st.selectbox('Выберите год показателей',
-                                 options=['2021', '2020'])
+                                 options=['2021', '2020', '2019'])
 
     st.markdown('---')
 
-    df = read_dataframe(section_name=section)
+    df = read_dataframe(section_name=section,
+                        year_analysis=year_analysis)
 
     with open('data/geodata.geojson', 'r') as f:
         geojson = json.load(f)

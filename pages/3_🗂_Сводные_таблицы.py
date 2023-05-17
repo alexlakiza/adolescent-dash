@@ -85,7 +85,7 @@ if __name__ == "__main__":
                            options=list(section_to_df.keys()))
 
     year_analysis = st.selectbox('Выберите год показателей',
-                                 options=['2021', '2020'])
+                                 options=['2021', '2020', '2019'])
 
     if section in columns_of_2nd_feature.keys():
         st.markdown('---')

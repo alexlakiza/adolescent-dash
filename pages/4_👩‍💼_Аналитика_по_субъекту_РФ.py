@@ -338,7 +338,7 @@ if __name__ == "__main__":
     chosen_region = st.selectbox(label='Выберите регион для анализа',
                                  options=pop_df['Регион'].tolist())
     year_to_analyze = st.selectbox('Выберите год показателей',
-                                   options=['2021', '2020'])
+                                   options=['2021', '2020', '2019'])
     okrug_of_chose_region = pop_df.loc[pop_df['Регион'] == chosen_region, 'Округ'].values[0]
 
     if not any([p1, p2, p3, p6, p7]):
