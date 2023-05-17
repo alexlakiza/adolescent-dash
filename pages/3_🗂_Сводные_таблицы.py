@@ -6,13 +6,13 @@ import streamlit as st
 sys.path.append(".")
 
 section_to_df = {
-    'Направления реализации молодежной политики': 'data/p1.parquet',
-    'Структуры по работе с молодежью': 'data/p2.parquet',
-    'Распространение информации о реализации молодежной политики': 'data/p3.parquet',
-    'Общественные объединения': 'data/p4.parquet',
-    'Общественные объединения на базе образовательных учреждений': 'data/p4-2.parquet',
-    'Молодежные форумы': 'data/p6.parquet',
-    'Добровольчество': 'data/p7-1.parquet'
+    'Направления реализации молодежной политики': 'p1.parquet',
+    'Структуры по работе с молодежью': 'p2.parquet',
+    'Информационное обеспечение реализации молодежной политики': 'p3.parquet',
+    'Общественные объединения': 'p4.parquet',
+    'Общественные объединения на базе образовательных учреждений': 'p4-2.parquet',
+    'Молодежные форумы': 'p6.parquet',
+    'Добровольчество': 'p7-1.parquet'
 }
 
 headers_for_pivot = {
@@ -21,8 +21,8 @@ headers_for_pivot = {
                                                   'политики по регионам РФ',
     'Структуры по работе с молодежью': '#### Сводная таблица показателей по структурам, работающим '
                                        'с молодежью по регионам РФ',
-    'Распространение информации о реализации молодежной политики': '#### Сводная таблица показателей распространения '
-                                                                   'информации по регионам РФ',
+    'Информационное обеспечение реализации молодежной политики': '#### Сводная таблица показателей информационного '
+                                                                 'обеспечения по регионам РФ',
     'Общественные объединения': '#### Сводная таблица показателей по молодежным объединениям по регионам РФ',
     'Общественные объединения на базе образовательных учреждений': '#### Сводная таблица показателей по '
                                                                    'молодежным объединениям на базе образовательных '
@@ -71,8 +71,8 @@ reverse_fed_okrug_names = {i: v for (v, i) in fed_okrug_full_names.items()}
 
 
 @st.cache_data
-def read_dataframe(section_name):
-    return pd.read_parquet(section_to_df[section_name])
+def read_dataframe(section_name, year_to_analyze):
+    return pd.read_parquet(f"data/{year_to_analyze}/{section_to_df[section_name]}")
 
 
 if __name__ == "__main__":
@@ -84,10 +84,14 @@ if __name__ == "__main__":
     section = st.selectbox("Выберите раздел показателей",
                            options=list(section_to_df.keys()))
 
+    year_analysis = st.selectbox('Выберите год показателей',
+                                 options=['2021', '2020'])
+
     if section in columns_of_2nd_feature.keys():
         st.markdown('---')
 
-        df = read_dataframe(section_name=section)
+        df = read_dataframe(section_name=section,
+                            year_to_analyze=year_analysis)
         st.markdown(headers_for_2d_sections[section])
         fed_okrug_1 = st.selectbox(label='Выберите федеральный округ',
                                    options=['Все округа'] + [fed_okrug_full_names[fo] for fo in df['Округ'].unique()])

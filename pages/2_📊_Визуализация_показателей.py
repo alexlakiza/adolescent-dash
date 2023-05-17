@@ -8,13 +8,13 @@ import streamlit as st
 sys.path.append(".")
 
 section_to_df = {
-    'Направления реализации молодежной политики': 'data/p1.parquet',
-    'Структуры по работе с молодежью': 'data/p2.parquet',
-    'Распространение информации о реализации молодежной политики': 'data/p3.parquet',
-    'Общественные объединения': 'data/p4.parquet',
-    'Общественные объединения на базе образовательных учреждений': 'data/p4-2.parquet',
-    'Молодежные форумы': 'data/p6.parquet',
-    'Добровольчество': 'data/p7-1.parquet'
+    'Направления реализации молодежной политики': 'p1.parquet',
+    'Структуры по работе с молодежью': 'p2.parquet',
+    'Информационное обеспечение реализации молодежной политики': 'p3.parquet',
+    'Общественные объединения': 'p4.parquet',
+    'Общественные объединения на базе образовательных учреждений': 'p4-2.parquet',
+    'Молодежные форумы': 'p6.parquet',
+    'Добровольчество': 'p7-1.parquet'
 }
 
 columns_of_2nd_feature = {
@@ -313,8 +313,9 @@ def section_for_volunteer_pie_chart(data2, data3, header2, header3):
                     use_container_width=True)
 
 
+@st.cache_data
 def read_dataframe(section_name):
-    return pd.read_parquet(section_to_df[section_name])
+    return pd.read_parquet(f"data/{year_analysis}/{section_to_df[section_name]}")
 
 
 if __name__ == "__main__":
@@ -323,10 +324,14 @@ if __name__ == "__main__":
     # TODO: Добавить описание этой страницы
     st.title("Визуализация показателей")
 
-    st.markdown("##### Для начала работы необходимо выбрать тот раздел показателей, по котором вы бы "
+    st.markdown("##### Для начала работы необходимо выбрать раздел и год показателей, по которым вы бы "
                 "хотели видеть визуализацию данных")
     section = st.selectbox("Выберите раздел показателей",
                            options=list(section_to_df.keys()))
+
+    year_analysis = st.selectbox('Выберите год показателей',
+                                 options=['2021', '2020'])
+
     st.markdown('---')
 
     df = read_dataframe(section_name=section)
@@ -383,7 +388,7 @@ if __name__ == "__main__":
                               data=df,
                               column_name=column_of_2nd_feature)
 
-    elif section == 'Распространение информации о реализации молодежной политики':  # P3
+    elif section == 'Информационное обеспечение реализации молодежной политики':  # P3
         section_for_map(data=df)
 
     elif section == 'Общественные объединения':  # P4
@@ -396,8 +401,7 @@ if __name__ == "__main__":
                         column_of_second_feature=column_of_2nd_feature,
                         bar_plot_xaxis_slice='Объединение')
 
-        section_for_pie_chart(header=f"#### Распределение значений среди видов объединений "
-                                     f"для показателя \"{column_of_2nd_feature}\"",
+        section_for_pie_chart(header=f"#### Доли значений для различных видов молодежных объединений",
                               data=df,
                               column_name=column_of_2nd_feature)
 
@@ -422,8 +426,8 @@ if __name__ == "__main__":
     elif section == 'Добровольчество':
         section_for_map(data=df)
 
-        df2 = pd.read_parquet('data/p7-2.parquet')
-        df3 = pd.read_parquet('data/p7-3.parquet')
+        df2 = pd.read_parquet(f'data/{year_analysis}/p7-2.parquet')
+        df3 = pd.read_parquet(f'data/{year_analysis}/p7-3.parquet')
 
         section_for_volunteer_pie_chart(data2=df2,
                                         data3=df3,

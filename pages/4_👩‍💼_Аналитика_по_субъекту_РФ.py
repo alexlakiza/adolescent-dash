@@ -267,14 +267,14 @@ def section_for_analysis_of_one_feature(feature_name: str,
                                     round_delta=round_delta)
 
 
-@st.cache_data
 def get_df_of_n_unities_region(data: pd.DataFrame, pop_data: pd.DataFrame,
-                               data_feature: str, new_feature_name: str):
+                               data_feature: str, new_feature_name: str,
+                               ppl_column):
     temp_df = data[data['Значение'].notna()].groupby(['Регион', 'Показатель']).sum(numeric_only=True).reset_index()
     result_df = pop_data.merge(temp_df[(temp_df['Показатель'] == data_feature) & (temp_df['Значение'] != 0)],
                                on='Регион', how='inner')
 
-    result_df[new_feature_name] = (result_df['Численность'] / result_df['Значение']).astype(int)
+    result_df[new_feature_name] = (result_df[ppl_column] / result_df['Значение']).astype(int)
 
     return result_df
 
@@ -333,10 +333,12 @@ if __name__ == "__main__":
         with st.expander('Стиль boxplot'):
             scatter_style_option = st.radio(label='Выберите стиль отображения региона на boxplot',
                                             options=['Точка', 'Вертикальная линия'])
-    pop_df = pd.read_csv('data/population.csv')
+    pop_df = pd.read_parquet('data/population.parquet')
 
     chosen_region = st.selectbox(label='Выберите регион для анализа',
                                  options=pop_df['Регион'].tolist())
+    year_to_analyze = st.selectbox('Выберите год показателей',
+                                   options=['2021', '2020'])
     okrug_of_chose_region = pop_df.loc[pop_df['Регион'] == chosen_region, 'Округ'].values[0]
 
     if not any([p1, p2, p3, p6, p7]):
@@ -345,13 +347,15 @@ if __name__ == "__main__":
     # P1
     if p1:
         st.markdown("#### Количество детских и молодeжных общественных объединений в регионе")
-        df = pd.read_parquet('data/p1.parquet')
+        df = pd.read_parquet(f'data/{year_to_analyze}/p1.parquet')
 
         temp_df_1 = get_df_of_n_unities_region(df, pop_df, 'Кол-во детских и молодeжных общественных объединений',
-                                               new_feature_name='Число человек на 1 общественное объединение')
+                                               new_feature_name='Число детей и молодых людей на 1 общественное '
+                                                                'объединение',
+                                               ppl_column='Молодежь + Дети')
 
         section_for_analysis_of_one_feature(feature_name='Количество детских и молодeжных общественных объединений',
-                                            column_name='Число человек на 1 общественное объединение',
+                                            column_name='Число детей и молодых людей на 1 общественное объединение',
                                             region=chosen_region,
                                             okrug=okrug_of_chose_region, data=temp_df_1, lower_is_bad=False,
                                             measurement='чел.')
@@ -373,15 +377,17 @@ if __name__ == "__main__":
 
     # P2
     if p2:
-        df2 = pd.read_parquet('data/p2.parquet')
+        df2 = pd.read_parquet(f'data/{year_to_analyze}/p2.parquet')
         temp_df_3 = get_df_of_n_unities_region(data=df2,
                                                pop_data=pop_df,
                                                data_feature='Кол-во структур',
-                                               new_feature_name='Число человек на 1 структуру по работе с молодежью')
+                                               new_feature_name='Число молодых людей на 1 структуру '
+                                                                'по работе с молодежью',
+                                               ppl_column='Молодежь')
         st.markdown("#### Количество структур по работе с молодежью")
 
         section_for_analysis_of_one_feature(feature_name='Количество структур по работе с молодежью',
-                                            column_name='Число человек на 1 структуру по работе с молодежью',
+                                            column_name='Число молодых людей на 1 структуру по работе с молодежью',
                                             region=chosen_region,
                                             okrug=okrug_of_chose_region,
                                             data=temp_df_3,
@@ -390,29 +396,9 @@ if __name__ == "__main__":
 
         st.divider()
 
-        # st.markdown("#### Объем финансирования на 1 структуру по работе с молодежью")
-        # temp_df_4 = pd.pivot_table(df2.groupby(['Регион', 'Показатель']).sum(numeric_only=True).reset_index(),
-        #                            columns='Показатель',
-        #                            values='Значение',
-        #                            index='Регион').reset_index()
-        # temp_df_4 = temp_df_4[temp_df_4['Объeм финансирования'] != 0].copy()
-        # temp_df_4['Объем финансирования на 1 структуру по работе '
-        #           'с молодежью'] = (temp_df_4['Объeм финансирования'] / temp_df_4['Кол-во структур']).astype(int)
-        # temp_df_4 = temp_df_4.merge(pop_df, on=['Регион'], how='inner')
-        #
-        # section_for_analysis_of_one_feature(feature_name='Объем финансирования на 1 структуру по работе с молодежью',
-        #                                     column_name='Объем финансирования на 1 структуру по работе с молодежью',
-        #                                     region=chosen_region,
-        #                                     okrug=okrug_of_chose_region,
-        #                                     data=temp_df_4,
-        #                                     lower_is_bad=False,
-        #                                     measurement='руб.')
-        #
-        # st.divider()
-
     if p3:
         st.markdown("#### Финансирование информационного освещения реализации молодежной политики")
-        df3 = pd.read_parquet('data/p3.parquet')
+        df3 = pd.read_parquet(f'data/{year_to_analyze}/p3.parquet')
 
         temp_df_5 = df3[(df3['Показатель'] == 'Финансирование информационного '
                                               'освещения реализации гос. мол. политики') &
@@ -434,7 +420,7 @@ if __name__ == "__main__":
 
     if p6:
         st.markdown("#### Количество молодежных форумов")
-        df6 = pd.read_parquet('data/p6.parquet')
+        df6 = pd.read_parquet(f'data/{year_to_analyze}/p6.parquet')
 
         temp_df_6 = df6[df6['Значение'].notna()].groupby(['Регион', 'Показатель']).sum(numeric_only=True).reset_index()
         temp_df_6 = temp_df_6[(temp_df_6['Показатель'] == 'Кол-во форумов')].copy()
@@ -453,14 +439,15 @@ if __name__ == "__main__":
         st.divider()
 
     if p7:
-        df7 = pd.read_parquet('data/p7-1.parquet')
+        df7 = pd.read_parquet(f'data/{year_to_analyze}/p7-1.parquet')
 
         temp_df_7 = get_df_of_n_unities_region(data=df7,
                                                pop_data=pop_df,
                                                data_feature='Кол-во гос. учреждений, '
                                                             'работающих с добровольцами/волонтерами',
                                                new_feature_name='Число человек на 1 гос. учреждение, '
-                                                                'работающее с добровольцами/волонтерами')
+                                                                'работающее с добровольцами/волонтерами',
+                                               ppl_column='Численность')
 
         st.markdown("#### Количество гос. учреждений, работающих с добровольцами/волонтерами")
 
