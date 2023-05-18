@@ -108,7 +108,8 @@ if __name__ == "__main__":
                                     aggfunc=agg_func_mapper[agg_func_option_1]))
 
     st.markdown('---')
-    df2 = read_dataframe(section_name=section)
+    df2 = read_dataframe(section_name=section,
+                         year_to_analyze=year_analysis)
     st.markdown(headers_for_pivot[section])
     fed_okrug_2 = st.selectbox(label='Выберите федеральный округ',
                                options=[fed_okrug_full_names[fo] for fo in df2['Округ'].unique()])

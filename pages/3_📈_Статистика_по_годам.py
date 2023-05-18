@@ -287,7 +287,7 @@ def plot_all_finance_forum(data):
 if __name__ == "__main__":
     st.set_page_config(page_title=None, page_icon=None, layout="wide", initial_sidebar_state="auto",
                        menu_items=None)
-    
+
     st.title("Статистика по годам")
     # TODO: Добавить описание страницы
 
@@ -315,40 +315,25 @@ if __name__ == "__main__":
 
     if finance_youth_policy:
         st.markdown("#### Графики объемов финансирования молодежной политики")
-        tab2, tab1 = st.tabs(["Общий график объемов финансирования", "Графики по отдельности"])
-        with tab1:
-            st.plotly_chart(plot_finance_youth_policy_subject_budget(df),
-                            use_container_width=True)
-            st.plotly_chart(plot_finance_youth_policy_organ_selfrule(df),
-                            use_container_width=True)
-        with tab2:
-            st.plotly_chart(plot_all_finance_youth_policy(df),
-                            use_container_width=True)
+        st.plotly_chart(plot_all_finance_youth_policy(df),
+                        use_container_width=True)
 
         st.markdown('---')
 
     if grants:
         st.markdown("#### Графики количества выданных грантов и грантовых средств")
         st.plotly_chart(plot_n_grants(df),
-                            use_container_width=True)
+                        use_container_width=True)
         st.plotly_chart(plot_money_grants(df),
-                            use_container_width=True)
+                        use_container_width=True)
 
         st.markdown('---')
 
     if unities:
         st.markdown("#### Графики количества общественных объединений и органов молодежного самоуправления")
         tab1, tab2 = st.tabs(["Общий график", "Графики по отдельности"])
-        with tab1:
-            st.plotly_chart(plot_all_n_unities_organs(df),
-                            use_container_width=True)
-        with tab2:
-            st.plotly_chart(plot_n_region_unities(df),
-                            use_container_width=True)
-            st.plotly_chart(plot_n_local_unities(df),
-                            use_container_width=True)
-            st.plotly_chart(plot_n_youth_selfrule(df),
-                            use_container_width=True)
+        st.plotly_chart(plot_all_n_unities_organs(df),
+                        use_container_width=True)
 
         st.markdown('---')
 
@@ -356,15 +341,8 @@ if __name__ == "__main__":
         st.markdown("#### Графики количества проведенных форумов, численности участников и объемов "
                     "финансирования форумов")
         st.plotly_chart(plot_n_forums(df),
-                            use_container_width=True)
+                        use_container_width=True)
         st.plotly_chart(plot_n_people_forums(df),
-                            use_container_width=True)
-        tab2, tab1 = st.tabs(["Общий график объемов финансирования", "Графики по отдельности"])
-        with tab1:
-            st.plotly_chart(plot_finance_forum_subject(df),
-                            use_container_width=True)
-            st.plotly_chart(plot_finance_forum_local(df),
-                            use_container_width=True)
-        with tab2:
-            st.plotly_chart(plot_all_finance_forum(df),
-                            use_container_width=True)
+                        use_container_width=True)
+        st.plotly_chart(plot_all_finance_forum(df),
+                        use_container_width=True)
