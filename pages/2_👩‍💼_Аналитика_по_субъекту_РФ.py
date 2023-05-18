@@ -18,6 +18,8 @@ fed_okrug_full_names = {
     "ДФО": "Дальневосточного Федерального Округа"
 }
 
+years_list = ['2019', '2020', '2021']
+
 
 def break_long_string(string):
     if len(string) > 40:
@@ -224,11 +226,13 @@ def section_for_analysis_of_one_feature(feature_name: str,
                                         okrug: str,
                                         data: pd.DataFrame,
                                         lower_is_bad: bool,
+                                        x_range,
                                         measurement=None,
                                         round_delta=True):
     if region not in data['Регион'].tolist():
         st.markdown(f'Для данного региона нет данных по '
                     f'показателю \"{feature_name}\"')
+
     else:
         if lower_is_bad:
             lower_values_is_bad = 'normal'
@@ -236,14 +240,16 @@ def section_for_analysis_of_one_feature(feature_name: str,
             lower_values_is_bad = 'inverse'
         tab1, tab2 = st.tabs(['Сравнение со всей Россией', "Сравнение с регионами Федерального Округа"])
 
+        year_data = data[data['Год'] == year_to_analyze].copy()
         with tab1:
-            st.plotly_chart(box_plot(data,
+            st.plotly_chart(box_plot(year_data,
                                      feature=column_name,
                                      region_to_highlight=region,
-                                     scatter_style=scatter_style_option),
+                                     scatter_style=scatter_style_option,
+                                     x_range=x_range),
                             use_container_width=True)
 
-            compare_and_show_metric(data=data,
+            compare_and_show_metric(data=year_data,
                                     feature_name=column_name,
                                     region=region,
                                     lower_values_is_bad=lower_values_is_bad,
@@ -251,13 +257,14 @@ def section_for_analysis_of_one_feature(feature_name: str,
                                     round_delta=round_delta)
 
         with tab2:
-            st.plotly_chart(box_plot(data[data['Округ'] == okrug],
+            st.plotly_chart(box_plot(year_data[year_data['Округ'] == okrug],
                                      feature=column_name,
                                      region_to_highlight=region,
-                                     scatter_style=scatter_style_option),
+                                     scatter_style=scatter_style_option,
+                                     x_range=x_range),
                             use_container_width=True)
 
-            compare_and_show_metric(data=data[data['Округ'] == okrug],
+            compare_and_show_metric(data=year_data[year_data['Округ'] == okrug],
                                     feature_name=column_name,
                                     region=region,
                                     lower_values_is_bad=lower_values_is_bad,
@@ -266,20 +273,64 @@ def section_for_analysis_of_one_feature(feature_name: str,
                                     measurement=measurement,
                                     round_delta=round_delta)
 
+        st.markdown(f"###### Динамика показателя \"{column_name}\" сквозь года")
+        cur_region_data = data[data['Регион'] == region].copy()
+
+        st.plotly_chart(line_chart(cur_region_data, column_name), use_container_width=True)
+        if year_to_analyze == '2021':
+            delta_colour = 'normal' if lower_is_bad else 'inverse'
+            val_2021 = cur_region_data.loc[cur_region_data['Год'] == '2021', column_name].values[0]
+            val_2020 = cur_region_data.loc[cur_region_data['Год'] == '2020', column_name].values[0]
+            st.metric(label=f"Изменение показателя {column_name} по сравнению с 2020 годом",
+                      value=f"{val_2021} {measurement}",
+                      delta=f"{val_2021 - val_2020} {measurement}",
+                      delta_color=delta_colour)
+        elif year_to_analyze == '2020':
+            delta_colour = 'normal' if lower_is_bad else 'inverse'
+            val_2019 = cur_region_data.loc[cur_region_data['Год'] == '2019', column_name].values[0]
+            val_2020 = cur_region_data.loc[cur_region_data['Год'] == '2020', column_name].values[0]
+            st.metric(label=f"Изменение показателя {column_name} по сравнению с 2019 годом",
+                      value=f"{val_2020} {measurement}",
+                      delta=f"{val_2020 - val_2019} {measurement}",
+                      delta_color=delta_colour)
+
+
+def line_chart(data, column_name):
+    fig = go.Figure()
+    fig.add_trace(go.Scatter(x=data['Год'],
+                             y=data[column_name],
+                             mode='lines+markers',
+                             line=dict(color='blue', width=2.5),
+                             marker=dict(color='blue', size=7.5),
+                             name=break_long_string(column_name)))
+
+    fig.add_trace(go.Scatter(x=[year_to_analyze],
+                             y=data[data['Год'] == year_to_analyze][column_name],
+                             mode='markers',
+                             marker=dict(color='red', size=10, symbol='diamond'),
+                             name=year_to_analyze))
+    fig.update_layout(margin={"r": 0, "t": 25, "l": 0, "b": 0},
+                      height=300,
+                      xaxis=dict(
+                          tickmode='array',
+                          tickvals=['2019', '2020', '2021'],
+                      ))
+    return fig
+
 
 def get_df_of_n_unities_region(data: pd.DataFrame, pop_data: pd.DataFrame,
                                data_feature: str, new_feature_name: str,
-                               ppl_column):
+                               ppl_column, year):
     temp_df = data[data['Значение'].notna()].groupby(['Регион', 'Показатель']).sum(numeric_only=True).reset_index()
     result_df = pop_data.merge(temp_df[(temp_df['Показатель'] == data_feature) & (temp_df['Значение'] != 0)],
                                on='Регион', how='inner')
 
     result_df[new_feature_name] = (result_df[ppl_column] / result_df['Значение']).astype(int)
-
+    result_df['Год'] = year
     return result_df
 
 
-def box_plot(data: pd.DataFrame, feature: str, region_to_highlight: str, scatter_style='Точка'):
+def box_plot(data: pd.DataFrame, feature: str, region_to_highlight: str, x_range, scatter_style='Точка'):
     fig = go.Figure()
 
     fig.add_trace(go.Box(x=data[feature],
@@ -309,6 +360,7 @@ def box_plot(data: pd.DataFrame, feature: str, region_to_highlight: str, scatter
                                  ))
     fig.update_layout(margin={"r": 0, "t": 25, "l": 0, "b": 0},
                       height=300)
+    fig.update_xaxes(range=x_range)
 
     return fig
 
@@ -316,7 +368,7 @@ def box_plot(data: pd.DataFrame, feature: str, region_to_highlight: str, scatter
 if __name__ == "__main__":
     st.set_page_config(page_title=None, page_icon=None, layout="wide", initial_sidebar_state="auto",
                        menu_items=None)
-    st.title("Статистика по региону РФ")
+    st.title("Аналитика по субъекту РФ")
     # TODO: Добавить описание этой страницы
 
     with st.sidebar:
@@ -347,23 +399,39 @@ if __name__ == "__main__":
     # P1
     if p1:
         st.markdown("#### Количество детских и молодeжных общественных объединений в регионе")
-        df = pd.read_parquet(f'data/{year_to_analyze}/p1.parquet')
+        # df = pd.read_parquet(f'data/{year_to_analyze}/p1.parquet')
 
-        temp_df_1 = get_df_of_n_unities_region(df, pop_df, 'Кол-во детских и молодeжных общественных объединений',
-                                               new_feature_name='Число детей и молодых людей на 1 общественное '
-                                                                'объединение',
-                                               ppl_column='Молодежь + Дети')
+        temp_df_1 = pd.concat([get_df_of_n_unities_region(pd.read_parquet(f'data/{year}/p1.parquet'),
+                                                          pop_df,
+                                                          'Кол-во детских и '
+                                                          'молодeжных общественных объединений',
+                                                          new_feature_name='Число детей и молодых '
+                                                                           'людей на 1 общественное '
+                                                                           'объединение',
+                                                          ppl_column='Молодежь + Дети', year=year)
+                               for year in years_list],
+                              ignore_index=True)
 
         section_for_analysis_of_one_feature(feature_name='Количество детских и молодeжных общественных объединений',
                                             column_name='Число детей и молодых людей на 1 общественное объединение',
                                             region=chosen_region,
                                             okrug=okrug_of_chose_region, data=temp_df_1, lower_is_bad=False,
-                                            measurement='чел.')
+                                            measurement='чел.',
+                                            x_range=[-10, 2750])
 
         st.markdown("#### Количество грантов")
-        temp_df_2 = df[df['Значение'].notna()].groupby(['Регион', 'Показатель']).sum(numeric_only=True).reset_index()
-        temp_df_2 = temp_df_2[(temp_df_2['Показатель'] ==
-                               'Кол-во грантов')].rename(columns={'Значение': 'Кол-во грантов'}).copy()
+        temp_dfs_list = []
+        for year in years_list:
+            temp_temp_df = pd.read_parquet(f'data/{year}/p1.parquet')
+            temp_temp_df = temp_temp_df[temp_temp_df['Значение'].notna()].groupby(['Регион', 'Показатель']).sum(
+                numeric_only=True).reset_index()
+            temp_temp_df = temp_temp_df[(temp_temp_df['Показатель'] ==
+                                         'Кол-во грантов')].rename(columns={'Значение': 'Кол-во грантов'}).copy()
+            temp_temp_df['Год'] = year
+            temp_dfs_list.append(temp_temp_df)
+
+        temp_df_2 = pd.concat(temp_dfs_list, ignore_index=True)
+
         temp_df_2 = temp_df_2.merge(pop_df, on=['Регион'], how='inner')
         section_for_analysis_of_one_feature(feature_name="Количество грантов",
                                             column_name='Кол-во грантов',
@@ -371,19 +439,29 @@ if __name__ == "__main__":
                                             okrug=okrug_of_chose_region,
                                             data=temp_df_2,
                                             lower_is_bad=True,
-                                            measurement='ед.')
+                                            measurement='ед.',
+                                            x_range=[-10, 300])
 
         st.divider()
 
     # P2
     if p2:
-        df2 = pd.read_parquet(f'data/{year_to_analyze}/p2.parquet')
-        temp_df_3 = get_df_of_n_unities_region(data=df2,
-                                               pop_data=pop_df,
-                                               data_feature='Кол-во структур',
-                                               new_feature_name='Число молодых людей на 1 структуру '
-                                                                'по работе с молодежью',
-                                               ppl_column='Молодежь')
+        # df2 = pd.read_parquet(f'data/{year_to_analyze}/p2.parquet')
+        # temp_df_3 = get_df_of_n_unities_region(data=df2,
+        #                                        pop_data=pop_df,
+        #                                        data_feature='Кол-во структур',
+        #                                        new_feature_name='Число молодых людей на 1 структуру '
+        #                                                         'по работе с молодежью',
+        #                                        ppl_column='Молодежь')
+
+        temp_df_3 = pd.concat([get_df_of_n_unities_region(pd.read_parquet(f'data/{year}/p2.parquet'),
+                                                          pop_df,
+                                                          data_feature='Кол-во структур',
+                                                          new_feature_name='Число молодых людей на 1 структуру '
+                                                                           'по работе с молодежью',
+                                                          ppl_column='Молодежь', year=year)
+                               for year in years_list],
+                              ignore_index=True)
         st.markdown("#### Количество структур по работе с молодежью")
 
         section_for_analysis_of_one_feature(feature_name='Количество структур по работе с молодежью',
@@ -392,17 +470,25 @@ if __name__ == "__main__":
                                             okrug=okrug_of_chose_region,
                                             data=temp_df_3,
                                             lower_is_bad=False,
-                                            measurement='чел.')
+                                            measurement='чел.',
+                                            x_range=[-100, 30000])
 
         st.divider()
 
     if p3:
         st.markdown("#### Финансирование информационного освещения реализации молодежной политики")
-        df3 = pd.read_parquet(f'data/{year_to_analyze}/p3.parquet')
+        # df3 = pd.read_parquet(f'data/{year_to_analyze}/p3.parquet')
 
-        temp_df_5 = df3[(df3['Показатель'] == 'Финансирование информационного '
-                                              'освещения реализации гос. мол. политики') &
-                        (df3['Значение'].notna())].copy()
+        temp_dfs_list_2 = []
+        for year in years_list:
+            temp_temp_df = pd.read_parquet(f'data/{year}/p3.parquet')
+            temp_temp_df = temp_temp_df[(temp_temp_df['Показатель'] == 'Финансирование информационного '
+                                                                       'освещения реализации гос. мол. политики') &
+                                        (temp_temp_df['Значение'].notna())].copy()
+            temp_temp_df['Год'] = year
+            temp_dfs_list_2.append(temp_temp_df)
+
+        temp_df_5 = pd.concat(temp_dfs_list_2, ignore_index=True)
 
         temp_df_5 = temp_df_5.rename(columns={'Значение': 'Финансирование информационного '
                                                           'освещения реализации молодежной политики'})
@@ -414,16 +500,25 @@ if __name__ == "__main__":
             okrug=okrug_of_chose_region,
             data=temp_df_5,
             lower_is_bad=True,
-            measurement='руб.')
+            measurement='руб.',
+            x_range=[-1000, 7000000])
 
         st.divider()
 
     if p6:
         st.markdown("#### Количество молодежных форумов")
-        df6 = pd.read_parquet(f'data/{year_to_analyze}/p6.parquet')
+        # df6 = pd.read_parquet(f'data/{year_to_analyze}/p6.parquet')
+        temp_dfs_list_3 = []
 
-        temp_df_6 = df6[df6['Значение'].notna()].groupby(['Регион', 'Показатель']).sum(numeric_only=True).reset_index()
-        temp_df_6 = temp_df_6[(temp_df_6['Показатель'] == 'Кол-во форумов')].copy()
+        for year in years_list:
+            temp_temp_df = pd.read_parquet(f'data/{year_to_analyze}/p6.parquet')
+            temp_temp_df = temp_temp_df[temp_temp_df['Значение'].notna()].groupby(['Регион', 'Показатель']).sum(
+                numeric_only=True).reset_index()
+            temp_temp_df = temp_temp_df[(temp_temp_df['Показатель'] == 'Кол-во форумов')].copy()
+            temp_temp_df['Год'] = year
+            temp_dfs_list_3.append(temp_temp_df)
+
+        temp_df_6 = pd.concat(temp_dfs_list_3, ignore_index=True)
         temp_df_6 = temp_df_6.rename(columns={'Значение': 'Количество форумов'}).merge(pop_df, on=['Регион'],
                                                                                        how='inner')
 
@@ -434,20 +529,31 @@ if __name__ == "__main__":
             okrug=okrug_of_chose_region,
             data=temp_df_6,
             lower_is_bad=True,
-            measurement='ед.')
+            measurement='ед.',
+            x_range=[-5, 78])
 
         st.divider()
 
     if p7:
         df7 = pd.read_parquet(f'data/{year_to_analyze}/p7-1.parquet')
 
-        temp_df_7 = get_df_of_n_unities_region(data=df7,
-                                               pop_data=pop_df,
-                                               data_feature='Кол-во гос. учреждений, '
-                                                            'работающих с добровольцами/волонтерами',
-                                               new_feature_name='Число человек на 1 гос. учреждение, '
-                                                                'работающее с добровольцами/волонтерами',
-                                               ppl_column='Численность')
+        # temp_df_7 = get_df_of_n_unities_region(data=df7,
+        #                                        pop_data=pop_df,
+        #                                        data_feature='Кол-во гос. учреждений, '
+        #                                                     'работающих с добровольцами/волонтерами',
+        #                                        new_feature_name='Число человек на 1 гос. учреждение, '
+        #                                                         'работающее с добровольцами/волонтерами',
+        #                                        ppl_column='Численность')
+
+        temp_df_7 = pd.concat([get_df_of_n_unities_region(pd.read_parquet(f'data/{year}/p7-1.parquet'),
+                                                          pop_df,
+                                                          data_feature='Кол-во гос. учреждений, '
+                                                                       'работающих с добровольцами/волонтерами',
+                                                          new_feature_name='Число человек на 1 гос. учреждение, '
+                                                                           'работающее с добровольцами/волонтерами',
+                                                          ppl_column='Численность', year=year)
+                               for year in years_list],
+                              ignore_index=True)
 
         st.markdown("#### Количество гос. учреждений, работающих с добровольцами/волонтерами")
 
@@ -459,16 +565,24 @@ if __name__ == "__main__":
                                             okrug=okrug_of_chose_region,
                                             data=temp_df_7,
                                             lower_is_bad=False,
-                                            measurement='чел.')
+                                            measurement='чел.',
+                                            x_range=[-100, 25000])
 
         st.markdown("#### Процент граждан, вовлеченных центрами поддержки добровольчества")
-        temp_df_8 = df7[(df7['Показатель'] == 'Число граждан, вовлеченных центрами поддержки добровольчества') &
-                        (df7['Значение'].notna())].copy()
+        temp_dfs_list_4 = []
+        for year in years_list:
+            temp_temp_df = pd.read_parquet(f'data/{year_to_analyze}/p7-1.parquet')
 
-        temp_df_8 = temp_df_8.merge(pop_df.drop(['Округ'], axis=1), on=['Регион'], how='inner').copy()
+            temp_temp_df = temp_temp_df[(temp_temp_df['Показатель'] == 'Число граждан, вовлеченных центрами поддержки добровольчества') &
+                        (temp_temp_df['Значение'].notna())].copy()
+            temp_temp_df = temp_temp_df.merge(pop_df.drop(['Округ'], axis=1), on=['Регион'], how='inner').copy()
+            temp_temp_df['Год'] = year
+            temp_temp_df['Процент граждан, вовлеченных центрами поддержки добровольчества'] = (
+                    temp_temp_df['Значение'] / temp_temp_df['Численность'] * 100).round(1)
 
-        temp_df_8['Процент граждан, вовлеченных центрами поддержки добровольчества'] = (
-                    temp_df_8['Значение'] / temp_df_8['Численность'] * 100).round(1)
+            temp_dfs_list_4.append(temp_temp_df)
+
+        temp_df_8 = pd.concat(temp_dfs_list_4)
 
         section_for_analysis_of_one_feature(feature_name='Процент граждан, вовлеченных центрами '
                                                          'поддержки добровольчества',
@@ -479,4 +593,5 @@ if __name__ == "__main__":
                                             data=temp_df_8,
                                             lower_is_bad=True,
                                             measurement='% от населения региона',
-                                            round_delta=False)
+                                            round_delta=False,
+                                            x_range=[-1, 20])
