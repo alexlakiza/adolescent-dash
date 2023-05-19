@@ -40,23 +40,11 @@ def map_chart(data,
     }
     color = colors_mapper[colors]
 
-    if second_feature == 'Все' or second_feature is None:
-        temp_df = data.groupby(['Регион', 'Показатель']).sum(numeric_only=True).reset_index()
-
-        temp_df = temp_df[temp_df['Показатель'] == first_feature].copy()
-    else:
-        temp_df = data.groupby(['Регион',
-                                'Показатель',
-                                column_of_second_feature]) \
-            .sum(numeric_only=True).reset_index()
-
-        temp_df = temp_df[(temp_df['Показатель'] == first_feature) &
-                          (temp_df[column_of_second_feature] == second_feature)].copy()
-
     fig = go.Figure()
+    st.dataframe(data)
 
-    fig.add_trace(go.Choroplethmapbox(geojson=geodata, z=temp_df["Значение"],
-                                      locations=temp_df["Регион"], featureidkey="properties.full_name",
+    fig.add_trace(go.Choroplethmapbox(geojson=geodata, z=data["Значение"],
+                                      locations=data["Регион"], featureidkey="properties.full_name",
                                       hovertemplate="<b>%{location}</b><br>Значение показателя = %{z}<extra></extra>",
                                       name=first_feature,
                                       marker_opacity=0.9,
@@ -183,7 +171,20 @@ def section_for_map(data,
 
         st.markdown(map_header)
 
-        st.plotly_chart(map_chart(data=df,
+        if second_option == 'Все' or second_option is None:
+            temp_df = df.groupby(['Регион', 'Показатель']).sum(numeric_only=True).reset_index()
+
+            temp_df = temp_df[temp_df['Показатель'] == main_option].copy()
+        else:
+            temp_df = df.groupby(['Регион',
+                                    'Показатель',
+                                    column_of_second_feature]) \
+                .sum(numeric_only=True).reset_index()
+
+            temp_df = temp_df[(temp_df['Показатель'] == main_option) &
+                              (temp_df[column_of_second_feature] == second_option)].copy()
+
+        st.plotly_chart(map_chart(data=temp_df,
                                   geodata=geojson,
                                   first_feature=main_option,
                                   second_feature=second_option,
