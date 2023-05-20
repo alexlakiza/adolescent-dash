@@ -46,6 +46,16 @@ def generate_comparison_for_map_chart(val, prev_year_name):
         return f"<br>{val} по сравнению с {prev_year_name} годом"
 
 
+def break_long_region_name(test_str):
+    if len(test_str.split(' ')) >= 3:
+        parts = test_str.split(' ')
+
+        left_parts = parts[:2]
+        right_parts = parts[2:]
+        return ' '.join(left_parts) + '\n' + ' '.join(right_parts)
+    return test_str
+
+
 def map_chart(data,
               geodata,
               first_feature,
@@ -142,6 +152,7 @@ def section_for_map(data,
                     checkbox_label=None,
                     column_of_second_feature=None,
                     bar_plot_xaxis_slice=None):
+    prev_year = str(int(chosen_year) - 1)
     if column_of_second_feature:
         second_feature_options = data[column_of_2nd_feature].unique().tolist()
 
@@ -152,10 +163,15 @@ def section_for_map(data,
             label=checkbox_label,
             options=second_feature_options
         )
+        st.markdown('---')
 
         if second_option == 'Все':
             map_header = map_title_slice + " " + second_slice_of_title_all
             table_header = table_title_slice + second_slice_of_title_all
+            top5_header = f"#### Топ 5 регионов по показателю \"{main_option}\" " + second_slice_of_title_all + \
+                          f" в {chosen_year} году"
+            deltas_header = f"#### Самые значительные изменения показателя \"{main_option}\" " \
+                            f"{second_slice_of_title_all} по сравнению с предыдущим годом"
 
             grouped_df = df.groupby(['Регион', 'Показатель', 'Год']).sum(numeric_only=True).reset_index()
             table_to_show = grouped_df[grouped_df['Показатель'] == main_option]
@@ -164,6 +180,10 @@ def section_for_map(data,
             second_slice_of_title = f" {second_slice_of_title_specific} \"_{second_option}_\""
             map_header = map_title_slice + second_slice_of_title
             table_header = table_title_slice + second_slice_of_title
+            top5_header = f"#### Топ 5 регионов по показателю \"{main_option}\"" + second_slice_of_title + \
+                          f" в {chosen_year} году"
+            deltas_header = f"#### Самые значительные изменения показателя \"{main_option}\" " \
+                            f"{second_slice_of_title} по сравнению с предыдущим годом"
 
             grouped_df = df.groupby(['Регион', 'Показатель', 'Год', column_of_2nd_feature]).sum(numeric_only=True) \
                 .reset_index()
@@ -192,8 +212,7 @@ def section_for_map(data,
                                   colors=color_palette),
                         use_container_width=True)
 
-        st.markdown(f"##### Топ 5 регионов по выбранному показателю \"{main_option}\"")
-
+        st.markdown(top5_header)
         top_regions_df = temp_df[temp_df['Год'] == chosen_year].nlargest(5, 'Значение')
         top_regions_df = top_regions_df.iloc[::-1].copy()
 
@@ -219,10 +238,6 @@ def section_for_map(data,
                                          legend_text_size=9),
                                 use_container_width=True)
 
-            st.markdown(f"##### Динамика показателей для топ 5 регионов по показателю \"{main_option}\"")
-            st.plotly_chart(line_chart(data=temp_df[temp_df['Регион'].isin(top_regions_df['Регион'].unique())]),
-                            use_container_width=True)
-
         else:
             st.plotly_chart(bar_plot(data=top_regions_df,
                                      first_feature=main_option,
@@ -231,10 +246,15 @@ def section_for_map(data,
                                      xaxis_title_slice=bar_plot_xaxis_slice),
                             use_container_width=True)
 
-            st.markdown(f"##### Динамика показателей для топ 5 регионов по показателю \"{main_option}\" "
-                        f"{second_slice_of_title}")
-            st.plotly_chart(line_chart(data=temp_df[temp_df['Регион'].isin(top_regions_df['Регион'].unique())]),
-                            use_container_width=True)
+        st.markdown(f"##### Динамика показателей для топ 5 регионов в {chosen_year} году "
+                    f"по показателю \"{main_option}\" сквозь года")
+        st.plotly_chart(line_chart(data=temp_df[temp_df['Регион'].isin(top_regions_df['Регион'].unique())]),
+                        use_container_width=True)
+
+        if chosen_year == '2021' or chosen_year == '2020':
+            st.markdown(deltas_header)
+            show_delta_tables(data=temp_df, prev_year=prev_year,
+                              cur_year=chosen_year)
 
         with st.expander(table_header):
             st.info("Вы можете отсортировать записи в таблице, нажав на поле. Также вы можете увеличить размер "
@@ -242,10 +262,12 @@ def section_for_map(data,
             st.dataframe(table_to_show)
 
     else:
+        st.markdown('---')
         top_regions_df = df[(df['Год'] == chosen_year) &
                             (df['Показатель'] == main_option)].nlargest(5, 'Значение')
         top_regions_df = top_regions_df.iloc[::-1].copy()
 
+        st.markdown(map_title_slice)
         st.plotly_chart(map_chart(data=df[(df['Показатель'] == main_option)],
                                   geodata=geojson,
                                   first_feature=main_option,
@@ -253,22 +275,49 @@ def section_for_map(data,
                                   colors=color_palette),
                         use_container_width=True)
 
-        st.markdown("##### Топ 5 регионов по выбранному показателю")
+        st.markdown(f"##### Топ 5 регионов по выбранному показателю {main_option} в {chosen_year} году")
         st.plotly_chart(bar_plot(data=top_regions_df,
                                  first_feature=main_option),
                         use_container_width=True)
 
-        st.markdown("##### Динамика показателей для топ 5 регионов")
-        # st.dataframe(df[df['Показатель'] == main_option].nlargest(5, 'Значение'))
+        st.markdown(f"##### Динамика показателей для топ 5 регионов {chosen_year} года сквозь года")
         st.plotly_chart(line_chart(data=df[(df['Показатель'] == main_option) &
                                            (df['Регион'].isin(top_regions_df['Регион'].unique()))]),
                         use_container_width=True)
 
+        temp_df = df[df['Показатель'] == main_option].copy()
+
+        if chosen_year == '2021' or chosen_year == '2020':
+            st.markdown(f"#### Самые значительные изменения показателя {main_option} по сравнению с предыдущим годом")
+            show_delta_tables(data=temp_df, prev_year=prev_year,
+                              cur_year=chosen_year)
+
         with st.expander(table_title_slice):
-            # st.markdown(table_title_slice)
             st.info("Вы можете отсортировать записи в таблице, нажав на поле. Также вы можете увеличить размер "
                     "таблицы, потянув за правый нижний угол")
             st.dataframe(df[df['Показатель'] == main_option])
+
+
+def show_delta_tables(data, prev_year, cur_year):
+    feat_name = f'Изменение показателя с {prev_year} по {cur_year}'
+    delta_df = pd.DataFrame.from_dict({'Регион': data[data['Год'] == cur_year]['Регион'].unique(),
+                                       feat_name: data[data['Год'] == cur_year]["Значение"].values -
+                                                  data[data['Год'] == prev_year]["Значение"].values})
+
+    delta_df['Регион'] = delta_df['Регион'].apply(break_long_region_name)
+
+    col1, col2 = st.columns(2)
+
+    with col1:
+        st.markdown(f'###### Регионы с '
+                    f'наибольшим __приростом__ значения показателя :chart_with_upwards_trend: :white_check_mark:')
+        st.dataframe(delta_df.nlargest(5, columns=[feat_name]))
+
+    with col2:
+        st.markdown(
+            f'###### Регионы с наибольшей '
+            f'__убылью__ значения показателя :chart_with_downwards_trend: :bangbang:')
+        st.dataframe(delta_df.nsmallest(5, columns=[feat_name]))
 
 
 def line_chart(data):
@@ -335,7 +384,7 @@ def section_for_detailed_bar_plot(data, header, column_name):
                                                   column_name=column_name),
                     use_container_width=True)
 
-    with st.expander(f'##### Таблица значений показателя \"{main_feature_for_bar}\"'):
+    with st.expander(f'##### Таблица всех значений показателя \"{main_feature_for_bar}\"'):
         st.info("Вы можете отсортировать записи в таблице, нажав на поле. Также вы можете увеличить размер "
                 "таблицы, потянув за правый нижний угол")
         st.dataframe(temp_df.drop(['Округ', 'Показатель'], axis=1))
@@ -399,8 +448,6 @@ if __name__ == "__main__":
     chosen_year = st.selectbox('Выберите год показателей',
                                options=years_to_analyze)
 
-    st.markdown('---')
-
     df = read_dataframe(section_name=section)
 
     with open('data/geodata.geojson', 'r') as f:
@@ -424,7 +471,7 @@ if __name__ == "__main__":
         'Выберите показатель для визуализации',
         options=df['Показатель'].unique().tolist())
     map_title_slice = f"#### Карта субъектов РФ для показателя \"{main_option}\""
-    table_title_slice = f"##### Таблица значений показателя \"{main_option}\""
+    table_title_slice = f"##### Таблица всех значений показателя \"{main_option}\""
 
     if section == 'Направления реализации молодежной политики':  # P1
         column_of_2nd_feature = columns_of_2nd_feature[section]
@@ -435,7 +482,7 @@ if __name__ == "__main__":
                         checkbox_label="Выберите направление реализации молодежной политики",
                         column_of_second_feature=column_of_2nd_feature,
                         bar_plot_xaxis_slice='Направление')
-
+        st.markdown('---')
         section_for_detailed_bar_plot(header=f"#### Детализация значений среди направлений "
                                              f"для показателя \"{column_of_2nd_feature}\"",
                                       data=df,
@@ -449,7 +496,7 @@ if __name__ == "__main__":
                         checkbox_label="Выберите вид структуры по работе с молодежью",
                         column_of_second_feature=column_of_2nd_feature,
                         bar_plot_xaxis_slice='Структура')
-
+        st.markdown('---')
         section_for_detailed_bar_plot(header=f"#### Детализация значений среди видов структур "
                                              f"для показателя \"{column_of_2nd_feature}\"",
                                       data=df,
@@ -467,7 +514,7 @@ if __name__ == "__main__":
                         checkbox_label="Выберите вид молодежных объединений",
                         column_of_second_feature=column_of_2nd_feature,
                         bar_plot_xaxis_slice='Объединение')
-
+        st.markdown('---')
         section_for_detailed_bar_plot(header=f"#### Детализация значений для различных видов молодежных объединений",
                                       data=df,
                                       column_name=column_of_2nd_feature)
@@ -484,7 +531,7 @@ if __name__ == "__main__":
                         checkbox_label="Выберите вид молодежных форумов",
                         column_of_second_feature=column_of_2nd_feature,
                         bar_plot_xaxis_slice='Форум')
-
+        st.markdown('---')
         section_for_detailed_bar_plot(header=f"#### Детализация значений среди видов форумов "
                                              f"для показателя \"{column_of_2nd_feature}\"",
                                       data=df,
@@ -492,7 +539,7 @@ if __name__ == "__main__":
 
     elif section == 'Добровольчество':
         section_for_map(data=df)
-
+        st.markdown('---')
         df2 = pd.read_parquet(f'data/{chosen_year}/p7-2.parquet')
         df3 = pd.read_parquet(f'data/{chosen_year}/p7-3.parquet')
 
