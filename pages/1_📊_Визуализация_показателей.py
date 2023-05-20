@@ -24,12 +24,31 @@ columns_of_2nd_feature = {
     'Молодежные форумы': 'Вид форума',
 }
 
+years_to_analyze = ['2021', '2020', '2019']
+
+
+def reformat_string_value(val):
+    """ Convert number 8939484 to 8 939 484"""
+    try:
+        return format(int(val), ',').replace(',', ' ').replace('.', ',')
+    except ValueError:
+        return '0'
+
+
+def generate_comparison_for_map_chart(val, prev_year_name):
+    if val == 0:
+        return f"<br>Значение с {prev_year_name} года<br>не изменилось"
+    elif val > 0:
+        val = reformat_string_value(val)
+        return f"<br>+{val} по сравнению с {prev_year_name} годом"
+    else:
+        val = reformat_string_value(val)
+        return f"<br>{val} по сравнению с {prev_year_name} годом"
+
 
 def map_chart(data,
               geodata,
               first_feature,
-              second_feature=None,
-              column_of_second_feature=None,
               map_style='open-street-map',
               colors='Желтый -> Персиковый -> Фиолетовый'):
     colors_mapper = {
@@ -40,15 +59,32 @@ def map_chart(data,
     }
     color = colors_mapper[colors]
 
-    fig = go.Figure()
-    st.dataframe(data)
+    temp_df = data[data['Год'] == chosen_year].copy()
+    if chosen_year == '2019':
+        custom_data = ['<br>Нет данных, чтобы сравнить значения 2019 и 2018 годов' for _ in range(len(temp_df))]
+    else:
+        prev_year = str(int(chosen_year) - 1)
+        prev_year_df = data[data['Год'] == prev_year].copy()
 
-    fig.add_trace(go.Choroplethmapbox(geojson=geodata, z=data["Значение"],
-                                      locations=data["Регион"], featureidkey="properties.full_name",
-                                      hovertemplate="<b>%{location}</b><br>Значение показателя = %{z}<extra></extra>",
+        custom_data = [generate_comparison_for_map_chart(i,
+                                                         prev_year) for i
+                       in temp_df['Значение'].values - prev_year_df['Значение'].values]
+
+    custom_text = [reformat_string_value(i) for i in temp_df["Значение"].values]
+
+    fig = go.Figure()
+    fig.add_trace(go.Choroplethmapbox(geojson=geodata,
+                                      z=temp_df["Значение"],
+                                      locations=temp_df["Регион"],
+                                      customdata=custom_data,
+                                      text=custom_text,
+                                      featureidkey="properties.full_name",
+                                      hovertemplate="<b>%{location}</b><br>Значение показателя = "
+                                                    f"%{{text}} в {chosen_year} году<br>"
+                                                    f"%{{customdata}}<extra></extra>",
                                       name=first_feature,
-                                      marker_opacity=0.9,
-                                      marker_line_width=0.25,
+                                      marker={'opacity': 0.9,
+                                              'line_width': 0.25},
                                       colorscale=color))
 
     fig.update_layout(margin={"r": 0, "t": 0, "l": 0, "b": 0},
@@ -65,74 +101,39 @@ def bar_plot(data,
              column_of_second_feature=None,
              legend_text_size=12,
              xaxis_title_slice=None):
-    if second_feature == 'Все' or second_feature is None:
-        mini_grouped_df = data.groupby(['Регион', 'Показатель']).sum(numeric_only=True).reset_index()
+    if column_of_second_feature:
+        fig = go.Figure()
 
-        top_regions = mini_grouped_df[mini_grouped_df['Показатель'] ==
-                                      first_feature].sort_values(by=['Значение'],
-                                                                 ascending=False)[:10]['Регион'].tolist()
-
-        if column_of_second_feature:
-
-            temp_df = data[(data['Показатель'] == first_feature) &
-                           (data['Регион'].isin(top_regions))].copy()
-
-            fig = go.Figure()
-
-            for second_feature in temp_df[column_of_second_feature].unique():
-                fig.add_trace(go.Bar(
-                    x=temp_df[temp_df[column_of_second_feature] == second_feature]['Значение'],
-                    y=temp_df[temp_df[column_of_second_feature] == second_feature]['Регион'],
-                    orientation='h',
-                    name=break_long_string(second_feature),
-                    hovertemplate=f"{main_option}<br><b>%{{y}}</b><br>Значение = %{{x}}<extra></extra>"
-                ))
-
-            fig.update_layout(barmode='stack',
-                              margin={"r": 0, "t": 10, "l": 0, "b": 0},
-                              legend=dict(font=dict(size=legend_text_size)))
-            fig.update_xaxes(title=first_feature)
-            return fig
-
-        else:
-            temp_df = mini_grouped_df[(mini_grouped_df['Показатель'] == first_feature) &
-                                      (mini_grouped_df['Регион'].isin(top_regions))].copy()
-
-            fig = go.Figure()
-
+        for second_feature in data[column_of_second_feature].unique():
             fig.add_trace(go.Bar(
-                x=temp_df['Значение'],
-                y=temp_df['Регион'],
+                x=data[data[column_of_second_feature] == second_feature]['Значение'],
+                y=data[data[column_of_second_feature] == second_feature]['Регион'],
                 orientation='h',
-                name=first_feature,
+                name=break_long_string(second_feature),
                 hovertemplate=f"{main_option}<br><b>%{{y}}</b><br>Значение = %{{x}}<extra></extra>"
             ))
 
-            fig.update_layout(margin={"r": 0, "t": 10, "l": 0, "b": 0},
-                              legend=dict(font=dict(size=legend_text_size)))
+        fig.update_layout(barmode='stack',
+                          margin={"r": 0, "t": 10, "l": 0, "b": 0},
+                          legend=dict(font=dict(size=legend_text_size)))
+        if second_feature:
+            fig.update_xaxes(title=f"{xaxis_title_slice} = {second_feature}")
+        else:
             fig.update_xaxes(title=first_feature)
-            return fig
-
     else:
-        temp_df = data[(data['Показатель'] == first_feature) &
-                       (data[column_of_second_feature] ==
-                        second_feature)].sort_values(by=['Значение'],
-                                                     ascending=False)[:10].copy()
-
         fig = go.Figure()
-
         fig.add_trace(go.Bar(
-            x=temp_df['Значение'],
-            y=temp_df['Регион'],
+            x=data['Значение'],
+            y=data['Регион'],
             orientation='h',
-            name=second_feature,
+            name=first_feature,
             hovertemplate=f"{main_option}<br><b>%{{y}}</b><br>Значение = %{{x}}<extra></extra>"
         ))
 
         fig.update_layout(margin={"r": 0, "t": 10, "l": 0, "b": 0},
                           legend=dict(font=dict(size=legend_text_size)))
-        fig.update_xaxes(title=f"{xaxis_title_slice} = {second_feature}")
-        return fig
+        fig.update_xaxes(title=first_feature)
+    return fig
 
 
 def section_for_map(data,
@@ -156,7 +157,7 @@ def section_for_map(data,
             map_header = map_title_slice + " " + second_slice_of_title_all
             table_header = table_title_slice + second_slice_of_title_all
 
-            grouped_df = df.groupby(['Регион', 'Показатель']).sum(numeric_only=True).reset_index()
+            grouped_df = df.groupby(['Регион', 'Показатель', 'Год']).sum(numeric_only=True).reset_index()
             table_to_show = grouped_df[grouped_df['Показатель'] == main_option]
 
         else:
@@ -164,7 +165,7 @@ def section_for_map(data,
             map_header = map_title_slice + second_slice_of_title
             table_header = table_title_slice + second_slice_of_title
 
-            grouped_df = df.groupby(['Регион', 'Показатель', column_of_2nd_feature]).sum(numeric_only=True) \
+            grouped_df = df.groupby(['Регион', 'Показатель', 'Год', column_of_2nd_feature]).sum(numeric_only=True) \
                 .reset_index()
             table_to_show = grouped_df[(grouped_df['Показатель'] == main_option) &
                                        (grouped_df[column_of_2nd_feature] == second_option)]
@@ -172,13 +173,13 @@ def section_for_map(data,
         st.markdown(map_header)
 
         if second_option == 'Все' or second_option is None:
-            temp_df = df.groupby(['Регион', 'Показатель']).sum(numeric_only=True).reset_index()
+            temp_df = df.groupby(['Регион', 'Показатель', 'Год']).sum(numeric_only=True).reset_index()
 
             temp_df = temp_df[temp_df['Показатель'] == main_option].copy()
         else:
             temp_df = df.groupby(['Регион',
-                                    'Показатель',
-                                    column_of_second_feature]) \
+                                  'Показатель', 'Год',
+                                  column_of_second_feature]) \
                 .sum(numeric_only=True).reset_index()
 
             temp_df = temp_df[(temp_df['Показатель'] == main_option) &
@@ -187,63 +188,110 @@ def section_for_map(data,
         st.plotly_chart(map_chart(data=temp_df,
                                   geodata=geojson,
                                   first_feature=main_option,
-                                  second_feature=second_option,
-                                  column_of_second_feature=column_of_second_feature,
                                   map_style=mapbox_style,
                                   colors=color_palette),
                         use_container_width=True)
 
-        st.markdown(f"##### Топ 10 регионов по выбранному показателю \"{main_option}\"")
+        st.markdown(f"##### Топ 5 регионов по выбранному показателю \"{main_option}\"")
+
+        top_regions_df = temp_df[temp_df['Год'] == chosen_year].nlargest(5, 'Значение')
+        top_regions_df = top_regions_df.iloc[::-1].copy()
+
         if second_option == 'Все':
-            tab3, tab5 = st.tabs(['Диаграмма без детализации', 'С детализацией'])
+            tab3, tab5 = st.tabs(['Диаграмма без детализации', 'Диаграмма с детализацией'])
             with tab3:
-                st.plotly_chart(bar_plot(data=df,
+                st.plotly_chart(bar_plot(data=top_regions_df,
                                          first_feature=main_option,
                                          second_feature=second_option),
                                 use_container_width=True)
             with tab5:
-                st.plotly_chart(bar_plot(data=df,
+                temp_temp_df = df[(df['Год'] == chosen_year) &
+                                  (df['Регион'].isin(top_regions_df['Регион'])) &
+                                  (df['Показатель'] == main_option)].copy()
+
+                temp_temp_df = temp_temp_df.merge(top_regions_df.rename(columns={'Значение': 'Сумма'}),
+                                                  on=['Регион'], how='left')
+
+                st.plotly_chart(bar_plot(data=temp_temp_df.sort_values(by=['Сумма']),
                                          first_feature=main_option,
                                          second_feature=second_option,
                                          column_of_second_feature=column_of_2nd_feature,
                                          legend_text_size=9),
                                 use_container_width=True)
+
+            st.markdown(f"##### Динамика показателей для топ 5 регионов по показателю \"{main_option}\"")
+            st.plotly_chart(line_chart(data=temp_df[temp_df['Регион'].isin(top_regions_df['Регион'].unique())]),
+                            use_container_width=True)
+
         else:
-            st.plotly_chart(bar_plot(data=df,
+            st.plotly_chart(bar_plot(data=top_regions_df,
                                      first_feature=main_option,
                                      second_feature=second_option,
                                      column_of_second_feature=column_of_2nd_feature,
                                      xaxis_title_slice=bar_plot_xaxis_slice),
                             use_container_width=True)
 
-        # show_table = st.checkbox(label='Таблица с данными',
-        #                          help='Показывать таблицу с данными по выбранному показателю?',
-        #                          value=False)
+            st.markdown(f"##### Динамика показателей для топ 5 регионов по показателю \"{main_option}\" "
+                        f"{second_slice_of_title}")
+            st.plotly_chart(line_chart(data=temp_df[temp_df['Регион'].isin(top_regions_df['Регион'].unique())]),
+                            use_container_width=True)
+
         with st.expander(table_header):
-            # st.markdown(table_header)
             st.info("Вы можете отсортировать записи в таблице, нажав на поле. Также вы можете увеличить размер "
                     "таблицы, потянув за правый нижний угол")
             st.dataframe(table_to_show)
 
     else:
-        st.markdown(map_title_slice)
-        st.plotly_chart(map_chart(data=df, geodata=geojson, first_feature=main_option, map_style=mapbox_style,
+        top_regions_df = df[(df['Год'] == chosen_year) &
+                            (df['Показатель'] == main_option)].nlargest(5, 'Значение')
+        top_regions_df = top_regions_df.iloc[::-1].copy()
+
+        st.plotly_chart(map_chart(data=df[(df['Показатель'] == main_option)],
+                                  geodata=geojson,
+                                  first_feature=main_option,
+                                  map_style=mapbox_style,
                                   colors=color_palette),
                         use_container_width=True)
 
-        st.markdown("##### Топ 10 регионов по выбранному показателю")
-        st.plotly_chart(bar_plot(data=df,
+        st.markdown("##### Топ 5 регионов по выбранному показателю")
+        st.plotly_chart(bar_plot(data=top_regions_df,
                                  first_feature=main_option),
                         use_container_width=True)
 
-        # show_table = st.checkbox(label='Таблица с данными',
-        #                          help='Показывать таблицу с данными по выбранному показателю?',
-        #                          value=False)
+        st.markdown("##### Динамика показателей для топ 5 регионов")
+        # st.dataframe(df[df['Показатель'] == main_option].nlargest(5, 'Значение'))
+        st.plotly_chart(line_chart(data=df[(df['Показатель'] == main_option) &
+                                           (df['Регион'].isin(top_regions_df['Регион'].unique()))]),
+                        use_container_width=True)
+
         with st.expander(table_title_slice):
             # st.markdown(table_title_slice)
             st.info("Вы можете отсортировать записи в таблице, нажав на поле. Также вы можете увеличить размер "
                     "таблицы, потянув за правый нижний угол")
             st.dataframe(df[df['Показатель'] == main_option])
+
+
+def line_chart(data):
+    fig = go.Figure()
+
+    for region in data['Регион'].unique():
+        df_slice = data[data['Регион'] == region].copy()
+        fig.add_trace(go.Scatter(x=df_slice['Год'],
+                                 y=df_slice['Значение'],
+                                 name=region,
+                                 mode='lines+markers',
+                                 line=dict(width=2.5),
+                                 marker=dict(size=7.5)
+                                 ))
+
+    fig.update_layout(margin={"r": 0, "t": 20, "l": 0, "b": 0},
+                      height=300,
+                      xaxis=dict(
+                          tickmode='array',
+                          tickvals=['2019', '2020', '2021'],
+                      ))
+
+    return fig
 
 
 def break_long_string(string):
@@ -271,31 +319,44 @@ def pie_plot(data, column_name, legend_text_size=12):
     return fig
 
 
-def section_for_pie_chart(data, header, column_name):
+def section_for_detailed_bar_plot(data, header, column_name):
     st.markdown(header)
 
-    region_for_pie = st.selectbox(label='Выберите регион',
+    region_for_bar = st.selectbox(label='Выберите регион',
                                   options=data['Регион'].unique().tolist())
-    main_feature_for_pie = st.selectbox(label='Выберите показатель',
+    main_feature_for_bar = st.selectbox(label='Выберите показатель',
                                         options=data['Показатель'].unique().tolist())
 
-    temp_df = data[(data['Показатель'] == main_feature_for_pie) &
-                   (data['Регион'] == region_for_pie)].copy()
+    temp_df = data[(data['Показатель'] == main_feature_for_bar) &
+                   (data['Регион'] == region_for_bar) &
+                   (data['Год'] == chosen_year)].copy()
 
-    st.plotly_chart(pie_plot(data=temp_df,
-                             column_name=column_name),
+    st.plotly_chart(bar_plot_for_detailed_feature(data=temp_df.copy(deep=True),
+                                                  column_name=column_name),
                     use_container_width=True)
 
-    # show_table = st.checkbox(label='Таблица с данными',
-    #                          help='Показывать таблицу с данными по выбранному показателю?',
-    #                          value=False,
-    #                          key='table_for_pie')
-
-    with st.expander(f'##### Таблица значений показателя \"{main_feature_for_pie}\"'):
-        # st.markdown(f'##### Таблица значений показателя \"{main_feature_for_pie}\"')
+    with st.expander(f'##### Таблица значений показателя \"{main_feature_for_bar}\"'):
         st.info("Вы можете отсортировать записи в таблице, нажав на поле. Также вы можете увеличить размер "
                 "таблицы, потянув за правый нижний угол")
         st.dataframe(temp_df.drop(['Округ', 'Показатель'], axis=1))
+
+
+def bar_plot_for_detailed_feature(data, column_name):
+    data['Значение'] = data['Значение'].fillna(0)
+    data = data.sort_values(by=['Значение']).copy()
+
+    fig = go.Figure()
+
+    fig.add_trace(go.Bar(y=data[column_name].apply(break_long_string),
+                         x=data['Значение'],
+                         orientation='h'))
+
+    fig.update_layout(margin={"r": 0, "t": 10, "l": 0, "b": 0},
+                      legend=dict(font=dict(size=9)),
+                      height=700)
+    fig.update_xaxes(title=column_name)
+    fig.update_yaxes()
+    return fig
 
 
 def section_for_volunteer_pie_chart(data2, data3, header2, header3):
@@ -315,8 +376,13 @@ def section_for_volunteer_pie_chart(data2, data3, header2, header3):
 
 
 @st.cache_data
-def read_dataframe(section_name, year_analysis):
-    return pd.read_parquet(f"data/{year_analysis}/{section_to_df[section_name]}")
+def read_dataframe(section_name):
+    final_df_list = []
+    for year in years_to_analyze:
+        temp_df = pd.read_parquet(f"data/{year}/{section_to_df[section_name]}")
+        temp_df['Год'] = year
+        final_df_list.append(temp_df)
+    return pd.concat(final_df_list, ignore_index=True)
 
 
 if __name__ == "__main__":
@@ -330,13 +396,12 @@ if __name__ == "__main__":
     section = st.selectbox("Выберите раздел показателей",
                            options=list(section_to_df.keys()))
 
-    year_analysis = st.selectbox('Выберите год показателей',
-                                 options=['2021', '2020', '2019'])
+    chosen_year = st.selectbox('Выберите год показателей',
+                               options=years_to_analyze)
 
     st.markdown('---')
 
-    df = read_dataframe(section_name=section,
-                        year_analysis=year_analysis)
+    df = read_dataframe(section_name=section)
 
     with open('data/geodata.geojson', 'r') as f:
         geojson = json.load(f)
@@ -371,10 +436,10 @@ if __name__ == "__main__":
                         column_of_second_feature=column_of_2nd_feature,
                         bar_plot_xaxis_slice='Направление')
 
-        section_for_pie_chart(header=f"#### Распределение значений среди направлений "
-                                     f"для показателя \"{column_of_2nd_feature}\"",
-                              data=df,
-                              column_name=column_of_2nd_feature)
+        section_for_detailed_bar_plot(header=f"#### Детализация значений среди направлений "
+                                             f"для показателя \"{column_of_2nd_feature}\"",
+                                      data=df,
+                                      column_name=column_of_2nd_feature)
 
     elif section == 'Структуры по работе с молодежью':  # P2
         column_of_2nd_feature = columns_of_2nd_feature[section]
@@ -385,10 +450,10 @@ if __name__ == "__main__":
                         column_of_second_feature=column_of_2nd_feature,
                         bar_plot_xaxis_slice='Структура')
 
-        section_for_pie_chart(header=f"#### Распределение значений среди видов структур "
-                                     f"для показателя \"{column_of_2nd_feature}\"",
-                              data=df,
-                              column_name=column_of_2nd_feature)
+        section_for_detailed_bar_plot(header=f"#### Детализация значений среди видов структур "
+                                             f"для показателя \"{column_of_2nd_feature}\"",
+                                      data=df,
+                                      column_name=column_of_2nd_feature)
 
     elif section == 'Информационное обеспечение реализации молодежной политики':  # P3
         section_for_map(data=df)
@@ -403,9 +468,9 @@ if __name__ == "__main__":
                         column_of_second_feature=column_of_2nd_feature,
                         bar_plot_xaxis_slice='Объединение')
 
-        section_for_pie_chart(header=f"#### Доли значений для различных видов молодежных объединений",
-                              data=df,
-                              column_name=column_of_2nd_feature)
+        section_for_detailed_bar_plot(header=f"#### Детализация значений для различных видов молодежных объединений",
+                                      data=df,
+                                      column_name=column_of_2nd_feature)
 
     elif section == 'Общественные объединения на базе образовательных учреждений':  # P4-2
         section_for_map(data=df)
@@ -420,16 +485,16 @@ if __name__ == "__main__":
                         column_of_second_feature=column_of_2nd_feature,
                         bar_plot_xaxis_slice='Форум')
 
-        section_for_pie_chart(header=f"#### Распределение значений среди видов форумов "
-                                     f"для показателя \"{column_of_2nd_feature}\"",
-                              data=df,
-                              column_name=column_of_2nd_feature)
+        section_for_detailed_bar_plot(header=f"#### Детализация значений среди видов форумов "
+                                             f"для показателя \"{column_of_2nd_feature}\"",
+                                      data=df,
+                                      column_name=column_of_2nd_feature)
 
     elif section == 'Добровольчество':
         section_for_map(data=df)
 
-        df2 = pd.read_parquet(f'data/{year_analysis}/p7-2.parquet')
-        df3 = pd.read_parquet(f'data/{year_analysis}/p7-3.parquet')
+        df2 = pd.read_parquet(f'data/{chosen_year}/p7-2.parquet')
+        df3 = pd.read_parquet(f'data/{chosen_year}/p7-3.parquet')
 
         section_for_volunteer_pie_chart(data2=df2,
                                         data3=df3,
