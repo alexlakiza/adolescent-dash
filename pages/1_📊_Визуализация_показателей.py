@@ -333,7 +333,7 @@ def line_chart(data):
                                  marker=dict(size=7.5)
                                  ))
 
-    fig.update_layout(margin={"r": 0, "t": 20, "l": 0, "b": 0},
+    fig.update_layout(margin={"r": 0, "t": 10, "l": 0, "b": 0},
                       height=300,
                       xaxis=dict(
                           tickmode='array',
@@ -483,8 +483,8 @@ if __name__ == "__main__":
                         column_of_second_feature=column_of_2nd_feature,
                         bar_plot_xaxis_slice='Направление')
         st.markdown('---')
-        section_for_detailed_bar_plot(header=f"#### Детализация значений среди направлений "
-                                             f"для показателя \"{column_of_2nd_feature}\"",
+        section_for_detailed_bar_plot(header=f"#### {main_option} для различных направлений "
+                                             f"реализации молодежной политики в {chosen_year} году",
                                       data=df,
                                       column_name=column_of_2nd_feature)
 
@@ -497,8 +497,8 @@ if __name__ == "__main__":
                         column_of_second_feature=column_of_2nd_feature,
                         bar_plot_xaxis_slice='Структура')
         st.markdown('---')
-        section_for_detailed_bar_plot(header=f"#### Детализация значений среди видов структур "
-                                             f"для показателя \"{column_of_2nd_feature}\"",
+        section_for_detailed_bar_plot(header=f"#### {main_option} для различных видов структур "
+                                             f"для показателя в {chosen_year} году",
                                       data=df,
                                       column_name=column_of_2nd_feature)
 
@@ -515,7 +515,8 @@ if __name__ == "__main__":
                         column_of_second_feature=column_of_2nd_feature,
                         bar_plot_xaxis_slice='Объединение')
         st.markdown('---')
-        section_for_detailed_bar_plot(header=f"#### Детализация значений для различных видов молодежных объединений",
+        section_for_detailed_bar_plot(header=f"#### {main_option} для различных видов молодежных объединений"
+                                             f" в {chosen_year} году",
                                       data=df,
                                       column_name=column_of_2nd_feature)
 
@@ -532,8 +533,8 @@ if __name__ == "__main__":
                         column_of_second_feature=column_of_2nd_feature,
                         bar_plot_xaxis_slice='Форум')
         st.markdown('---')
-        section_for_detailed_bar_plot(header=f"#### Детализация значений среди видов форумов "
-                                             f"для показателя \"{column_of_2nd_feature}\"",
+        section_for_detailed_bar_plot(header=f"#### {main_option} для различных видов форумов "
+                                             f"в {chosen_year} году",
                                       data=df,
                                       column_name=column_of_2nd_feature)
 
