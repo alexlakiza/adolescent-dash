@@ -281,7 +281,7 @@ def section_for_analysis_of_one_feature(feature_name: str,
             delta_colour = 'normal' if lower_is_bad else 'inverse'
             val_2021 = cur_region_data.loc[cur_region_data['Год'] == '2021', column_name].values[0]
             val_2020 = cur_region_data.loc[cur_region_data['Год'] == '2020', column_name].values[0]
-            st.metric(label=f"Изменение показателя {column_name} по сравнению с 2020 годом",
+            st.metric(label=f"Изменение показателя \"{column_name}\" по сравнению с 2020 годом",
                       value=f"{val_2021} {measurement}",
                       delta=f"{val_2021 - val_2020} {measurement}",
                       delta_color=delta_colour)
@@ -289,7 +289,7 @@ def section_for_analysis_of_one_feature(feature_name: str,
             delta_colour = 'normal' if lower_is_bad else 'inverse'
             val_2019 = cur_region_data.loc[cur_region_data['Год'] == '2019', column_name].values[0]
             val_2020 = cur_region_data.loc[cur_region_data['Год'] == '2020', column_name].values[0]
-            st.metric(label=f"Изменение показателя {column_name} по сравнению с 2019 годом",
+            st.metric(label=f"Изменение показателя \"{column_name}\" по сравнению с 2019 годом",
                       value=f"{val_2020} {measurement}",
                       delta=f"{val_2020 - val_2019} {measurement}",
                       delta_color=delta_colour)

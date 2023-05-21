@@ -128,7 +128,7 @@ def bar_plot(data,
                           legend=dict(font=dict(size=legend_text_size)),
                           height=350)
         if second_feature:
-            fig.update_xaxes(title=f"{xaxis_title_slice} = {second_feature}")
+            fig.update_xaxes(title=first_feature)
         else:
             fig.update_xaxes(title=first_feature)
     else:
