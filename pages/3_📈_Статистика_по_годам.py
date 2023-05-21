@@ -331,7 +331,6 @@ if __name__ == "__main__":
 
     if unities:
         st.markdown("#### Графики количества общественных объединений и органов молодежного самоуправления")
-        tab1, tab2 = st.tabs(["Общий график", "Графики по отдельности"])
         st.plotly_chart(plot_all_n_unities_organs(df),
                         use_container_width=True)
 

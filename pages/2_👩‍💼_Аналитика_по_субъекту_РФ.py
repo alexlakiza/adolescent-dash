@@ -399,7 +399,6 @@ if __name__ == "__main__":
     # P1
     if p1:
         st.markdown("#### Количество детских и молодeжных общественных объединений в регионе")
-        # df = pd.read_parquet(f'data/{year_to_analyze}/p1.parquet')
 
         temp_df_1 = pd.concat([get_df_of_n_unities_region(pd.read_parquet(f'data/{year}/p1.parquet'),
                                                           pop_df,
@@ -446,14 +445,6 @@ if __name__ == "__main__":
 
     # P2
     if p2:
-        # df2 = pd.read_parquet(f'data/{year_to_analyze}/p2.parquet')
-        # temp_df_3 = get_df_of_n_unities_region(data=df2,
-        #                                        pop_data=pop_df,
-        #                                        data_feature='Кол-во структур',
-        #                                        new_feature_name='Число молодых людей на 1 структуру '
-        #                                                         'по работе с молодежью',
-        #                                        ppl_column='Молодежь')
-
         temp_df_3 = pd.concat([get_df_of_n_unities_region(pd.read_parquet(f'data/{year}/p2.parquet'),
                                                           pop_df,
                                                           data_feature='Кол-во структур',
@@ -477,7 +468,6 @@ if __name__ == "__main__":
 
     if p3:
         st.markdown("#### Финансирование информационного освещения реализации молодежной политики")
-        # df3 = pd.read_parquet(f'data/{year_to_analyze}/p3.parquet')
 
         temp_dfs_list_2 = []
         for year in years_list:
@@ -507,19 +497,20 @@ if __name__ == "__main__":
 
     if p6:
         st.markdown("#### Количество молодежных форумов")
-        # df6 = pd.read_parquet(f'data/{year_to_analyze}/p6.parquet')
         temp_dfs_list_3 = []
 
         for year in years_list:
-            temp_temp_df = pd.read_parquet(f'data/{year_to_analyze}/p6.parquet')
-            temp_temp_df = temp_temp_df[temp_temp_df['Значение'].notna()].groupby(['Регион', 'Показатель']).sum(
-                numeric_only=True).reset_index()
+            temp_temp_df = pd.read_parquet(f'data/{year}/p6.parquet')
+            temp_temp_df = temp_temp_df.groupby(['Регион', 'Показатель'])[['Значение']].sum().reset_index()
             temp_temp_df = temp_temp_df[(temp_temp_df['Показатель'] == 'Кол-во форумов')].copy()
             temp_temp_df['Год'] = year
             temp_dfs_list_3.append(temp_temp_df)
 
         temp_df_6 = pd.concat(temp_dfs_list_3, ignore_index=True)
-        temp_df_6 = temp_df_6.rename(columns={'Значение': 'Количество форумов'}).merge(pop_df, on=['Регион'],
+
+        temp_df_6 = temp_df_6.rename(columns={'Значение': 'Количество форумов'}).merge(pop_df[['Регион',
+                                                                                               'Округ']],
+                                                                                       on=['Регион'],
                                                                                        how='inner')
 
         section_for_analysis_of_one_feature(
@@ -535,16 +526,6 @@ if __name__ == "__main__":
         st.divider()
 
     if p7:
-        df7 = pd.read_parquet(f'data/{year_to_analyze}/p7-1.parquet')
-
-        # temp_df_7 = get_df_of_n_unities_region(data=df7,
-        #                                        pop_data=pop_df,
-        #                                        data_feature='Кол-во гос. учреждений, '
-        #                                                     'работающих с добровольцами/волонтерами',
-        #                                        new_feature_name='Число человек на 1 гос. учреждение, '
-        #                                                         'работающее с добровольцами/волонтерами',
-        #                                        ppl_column='Численность')
-
         temp_df_7 = pd.concat([get_df_of_n_unities_region(pd.read_parquet(f'data/{year}/p7-1.parquet'),
                                                           pop_df,
                                                           data_feature='Кол-во гос. учреждений, '
@@ -571,10 +552,11 @@ if __name__ == "__main__":
         st.markdown("#### Процент граждан, вовлеченных центрами поддержки добровольчества")
         temp_dfs_list_4 = []
         for year in years_list:
-            temp_temp_df = pd.read_parquet(f'data/{year_to_analyze}/p7-1.parquet')
+            temp_temp_df = pd.read_parquet(f'data/{year}/p7-1.parquet')
 
-            temp_temp_df = temp_temp_df[(temp_temp_df['Показатель'] == 'Число граждан, вовлеченных центрами поддержки добровольчества') &
-                        (temp_temp_df['Значение'].notna())].copy()
+            temp_temp_df = temp_temp_df[
+                (temp_temp_df['Показатель'] == 'Число граждан, вовлеченных центрами поддержки добровольчества') &
+                (temp_temp_df['Значение'].notna())].copy()
             temp_temp_df = temp_temp_df.merge(pop_df.drop(['Округ'], axis=1), on=['Регион'], how='inner').copy()
             temp_temp_df['Год'] = year
             temp_temp_df['Процент граждан, вовлеченных центрами поддержки добровольчества'] = (

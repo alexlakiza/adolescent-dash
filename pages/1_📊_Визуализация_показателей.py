@@ -125,7 +125,8 @@ def bar_plot(data,
 
         fig.update_layout(barmode='stack',
                           margin={"r": 0, "t": 10, "l": 0, "b": 0},
-                          legend=dict(font=dict(size=legend_text_size)))
+                          legend=dict(font=dict(size=legend_text_size)),
+                          height=350)
         if second_feature:
             fig.update_xaxes(title=f"{xaxis_title_slice} = {second_feature}")
         else:
@@ -141,7 +142,8 @@ def bar_plot(data,
         ))
 
         fig.update_layout(margin={"r": 0, "t": 10, "l": 0, "b": 0},
-                          legend=dict(font=dict(size=legend_text_size)))
+                          legend=dict(font=dict(size=legend_text_size)),
+                          height=350)
         fig.update_xaxes(title=first_feature)
     return fig
 
@@ -368,20 +370,23 @@ def pie_plot(data, column_name, legend_text_size=12):
     return fig
 
 
-def section_for_detailed_bar_plot(data, header, column_name):
-    st.markdown(header)
-
+def section_for_detailed_bar_plot(data, header, column_name,
+                                  detailed_bar_plot_height):
     region_for_bar = st.selectbox(label='Выберите регион',
                                   options=data['Регион'].unique().tolist())
     main_feature_for_bar = st.selectbox(label='Выберите показатель',
                                         options=data['Показатель'].unique().tolist())
+
+    st.markdown(f"#### {main_feature_for_bar} {header}")
 
     temp_df = data[(data['Показатель'] == main_feature_for_bar) &
                    (data['Регион'] == region_for_bar) &
                    (data['Год'] == chosen_year)].copy()
 
     st.plotly_chart(bar_plot_for_detailed_feature(data=temp_df.copy(deep=True),
-                                                  column_name=column_name),
+                                                  column_name=column_name,
+                                                  bar_plot_height=detailed_bar_plot_height,
+                                                  feature=main_feature_for_bar),
                     use_container_width=True)
 
     with st.expander(f'##### Таблица всех значений показателя \"{main_feature_for_bar}\"'):
@@ -390,7 +395,7 @@ def section_for_detailed_bar_plot(data, header, column_name):
         st.dataframe(temp_df.drop(['Округ', 'Показатель'], axis=1))
 
 
-def bar_plot_for_detailed_feature(data, column_name):
+def bar_plot_for_detailed_feature(data, column_name, bar_plot_height, feature):
     data['Значение'] = data['Значение'].fillna(0)
     data = data.sort_values(by=['Значение']).copy()
 
@@ -402,9 +407,8 @@ def bar_plot_for_detailed_feature(data, column_name):
 
     fig.update_layout(margin={"r": 0, "t": 10, "l": 0, "b": 0},
                       legend=dict(font=dict(size=9)),
-                      height=700)
-    fig.update_xaxes(title=column_name)
-    fig.update_yaxes()
+                      height=bar_plot_height)
+    fig.update_xaxes(title=feature)
     return fig
 
 
@@ -483,10 +487,11 @@ if __name__ == "__main__":
                         column_of_second_feature=column_of_2nd_feature,
                         bar_plot_xaxis_slice='Направление')
         st.markdown('---')
-        section_for_detailed_bar_plot(header=f"#### {main_option} для различных направлений "
+        section_for_detailed_bar_plot(header=f" для различных направлений "
                                              f"реализации молодежной политики в {chosen_year} году",
                                       data=df,
-                                      column_name=column_of_2nd_feature)
+                                      column_name=column_of_2nd_feature,
+                                      detailed_bar_plot_height=700)
 
     elif section == 'Структуры по работе с молодежью':  # P2
         column_of_2nd_feature = columns_of_2nd_feature[section]
@@ -497,10 +502,11 @@ if __name__ == "__main__":
                         column_of_second_feature=column_of_2nd_feature,
                         bar_plot_xaxis_slice='Структура')
         st.markdown('---')
-        section_for_detailed_bar_plot(header=f"#### {main_option} для различных видов структур "
-                                             f"для показателя в {chosen_year} году",
+        section_for_detailed_bar_plot(header=f" для различных видов структур "
+                                             f"в {chosen_year} году",
                                       data=df,
-                                      column_name=column_of_2nd_feature)
+                                      column_name=column_of_2nd_feature,
+                                      detailed_bar_plot_height=250)
 
     elif section == 'Информационное обеспечение реализации молодежной политики':  # P3
         section_for_map(data=df)
@@ -515,10 +521,11 @@ if __name__ == "__main__":
                         column_of_second_feature=column_of_2nd_feature,
                         bar_plot_xaxis_slice='Объединение')
         st.markdown('---')
-        section_for_detailed_bar_plot(header=f"#### {main_option} для различных видов молодежных объединений"
+        section_for_detailed_bar_plot(header=f" для различных видов молодежных объединений"
                                              f" в {chosen_year} году",
                                       data=df,
-                                      column_name=column_of_2nd_feature)
+                                      column_name=column_of_2nd_feature,
+                                      detailed_bar_plot_height=400)
 
     elif section == 'Общественные объединения на базе образовательных учреждений':  # P4-2
         section_for_map(data=df)
@@ -533,10 +540,11 @@ if __name__ == "__main__":
                         column_of_second_feature=column_of_2nd_feature,
                         bar_plot_xaxis_slice='Форум')
         st.markdown('---')
-        section_for_detailed_bar_plot(header=f"#### {main_option} для различных видов форумов "
+        section_for_detailed_bar_plot(header=f" для различных видов форумов "
                                              f"в {chosen_year} году",
                                       data=df,
-                                      column_name=column_of_2nd_feature)
+                                      column_name=column_of_2nd_feature,
+                                      detailed_bar_plot_height=400)
 
     elif section == 'Добровольчество':
         section_for_map(data=df)
