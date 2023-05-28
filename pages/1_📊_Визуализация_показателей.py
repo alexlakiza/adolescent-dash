@@ -248,8 +248,8 @@ def section_for_map(data,
                                      xaxis_title_slice=bar_plot_xaxis_slice),
                             use_container_width=True)
 
-        st.markdown(f"##### Динамика показателей для топ 5 регионов в {chosen_year} году "
-                    f"по показателю \"{main_option}\" сквозь года")
+        st.markdown(f"##### Динамика значений показателя \"{main_option}\" сквозь года для топ 5 регионов "
+                    f"{chosen_year} года ")
         st.plotly_chart(line_chart(data=temp_df[temp_df['Регион'].isin(top_regions_df['Регион'].unique())]),
                         use_container_width=True)
 
@@ -282,7 +282,7 @@ def section_for_map(data,
                                  first_feature=main_option),
                         use_container_width=True)
 
-        st.markdown(f"##### Динамика показателей для топ 5 регионов {chosen_year} года сквозь года")
+        st.markdown(f"##### Динамика значений показателя для топ 5 регионов {chosen_year} года сквозь года")
         st.plotly_chart(line_chart(data=df[(df['Показатель'] == main_option) &
                                            (df['Регион'].isin(top_regions_df['Регион'].unique()))]),
                         use_container_width=True)
@@ -389,7 +389,8 @@ def section_for_detailed_bar_plot(data, header, column_name,
                                                   feature=main_feature_for_bar),
                     use_container_width=True)
 
-    with st.expander(f'##### Таблица всех значений показателя \"{main_feature_for_bar}\"'):
+    with st.expander(f'##### Таблица всех значений показателя \"{main_feature_for_bar}\"'
+                     f' в {chosen_year} году в регионе \"{region_for_bar}\"'):
         st.info("Вы можете отсортировать записи в таблице, нажав на поле. Также вы можете увеличить размер "
                 "таблицы, потянув за правый нижний угол")
         st.dataframe(temp_df.drop(['Округ', 'Показатель'], axis=1))
@@ -443,7 +444,7 @@ if __name__ == "__main__":
                        menu_items=None)
     st.title("Визуализация показателей по субъектам РФ")
     st.markdown("Страница для визуализации показателей реализации молодежной политики РФ за 2019-2021 "
-                "года по субъектам")
+                "года по субъектам Российской Федерации")
     st.markdown("#### Для начала работы необходимо выбрать показатель для визуализации")
     section = st.selectbox("Выберите раздел показателей",
                            options=list(section_to_df.keys()))

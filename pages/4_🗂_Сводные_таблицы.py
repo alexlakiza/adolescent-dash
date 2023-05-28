@@ -133,9 +133,7 @@ if __name__ == "__main__":
                                       value=False)
 
         if show_2d_feature:
-            index_cols.extend([columns_of_2nd_feature[section]] )
-
-            print(index_cols)
+            index_cols.extend([columns_of_2nd_feature[section]])
 
     st.dataframe(pd.pivot_table(df2,
                                 values='Значение',
