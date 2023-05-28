@@ -441,11 +441,10 @@ def read_dataframe(section_name):
 if __name__ == "__main__":
     st.set_page_config(page_title=None, page_icon=None, layout="wide", initial_sidebar_state="auto",
                        menu_items=None)
-    # TODO: Добавить описание этой страницы
-    st.title("Визуализация показателей")
-
-    st.markdown("##### Для начала работы необходимо выбрать раздел и год показателей, по которым вы бы "
-                "хотели видеть визуализацию данных")
+    st.title("Визуализация показателей по субъектам РФ")
+    st.markdown("Страница для визуализации показателей реализации молодежной политики РФ за 2019-2021 "
+                "года по субъектам")
+    st.markdown("#### Для начала работы необходимо выбрать показатель для визуализации")
     section = st.selectbox("Выберите раздел показателей",
                            options=list(section_to_df.keys()))
 

@@ -369,7 +369,7 @@ if __name__ == "__main__":
     st.set_page_config(page_title=None, page_icon=None, layout="wide", initial_sidebar_state="auto",
                        menu_items=None)
     st.title("Аналитика по субъекту РФ")
-    # TODO: Добавить описание этой страницы
+    st.markdown("##### Для начала работы выберите субъект РФ, по которому вы бы хотели получить аналитическую сводку")
 
     with st.sidebar:
         p1 = st.checkbox(label='Общие показатели реализации молодежной политики',
